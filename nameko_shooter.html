@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>なめこシューティング ✈️</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    html,body { width:100%; height:100%; overflow:hidden; background:#0a0a1a; touch-action:none; }
+    body { display:flex; align-items:center; justify-content:center; }
+    #gameCanvas { display:block; box-shadow:0 0 30px rgba(74,158,255,0.4); image-rendering:pixelated; touch-action:none; }
+    #controller { position:fixed; bottom:0; left:0; right:0; height:180px; pointer-events:none; display:none; }
+    #stick-area { position:absolute; left:24px; bottom:24px; width:120px; height:120px; pointer-events:auto; }
+    #stick-base { position:absolute; inset:0; border-radius:50%; background:rgba(255,255,255,0.08); border:2px solid rgba(255,255,255,0.2); }
+    #stick-knob { position:absolute; width:50px; height:50px; border-radius:50%; background:radial-gradient(circle at 35% 35%,rgba(255,255,255,0.5),rgba(100,180,255,0.35)); border:2px solid rgba(255,255,255,0.4); top:50%; left:50%; transform:translate(-50%,-50%); pointer-events:none; }
+    #shoot-btn { position:absolute; right:32px; bottom:32px; width:90px; height:90px; border-radius:50%; background:radial-gradient(circle at 35% 35%,rgba(255,80,80,0.8),rgba(180,20,20,0.7)); border:3px solid rgba(255,120,120,0.6); display:flex; align-items:center; justify-content:center; font-size:28px; pointer-events:auto; user-select:none; box-shadow:0 0 18px rgba(255,60,60,0.4); transition:transform 0.08s,box-shadow 0.08s; }
+    #shoot-btn.pressed { transform:scale(0.92); box-shadow:0 0 8px rgba(255,60,60,0.3); }
+  </style>
+</head>
+<body>
+<canvas id="gameCanvas"></canvas>
+<div id="controller">
+  <div id="stick-area"><div id="stick-base"></div><div id="stick-knob"></div></div>
+  <div id="shoot-btn">🔫</div>
+</div>
+<script>
+const GAME_W=390, GAME_H=700;
+const canvas=document.getElementById('gameCanvas');
+const ctx=canvas.getContext('2d');
+let scale=1;
+
+function resizeCanvas(){
+const vw=window.innerWidth, vh=window.innerHeight;
+scale=Math.min(vw/GAME_W, vh/GAME_H);
+canvas.style.width=(GAME_W*scale)+‘px’;
+canvas.style.height=(GAME_H*scale)+‘px’;
+canvas.width=GAME_W; canvas.height=GAME_H;
+}
+resizeCanvas();
+window.addEventListener(‘resize’,resizeCanvas);
+
+const isTouch=(‘ontouchstart’ in window)||(navigator.maxTouchPoints>0);
+if(isTouch) document.getElementById(‘controller’).style.display=‘block’;
+
+let state=‘title’, score=0, hiScore=0, frameCount=0;
+const player={x:GAME_W/2,y:GAME_H-110,w:64,h:48,speed:4.5,shootCooldown:0,shootRate:8,invincible:0};
+
+// キーボード
+const keys={};
+document.addEventListener(‘keydown’,e=>{
+keys[e.code]=true;
+if(e.code===‘Space’){if(state===‘title’||state===‘gameover’)startGame();e.preventDefault();}
+if([‘ArrowLeft’,‘ArrowRight’,‘ArrowUp’,‘ArrowDown’].includes(e.code))e.preventDefault();
+});
+document.addEventListener(‘keyup’,e=>{keys[e.code]=false;});
+
+// タップでスタート
+canvas.addEventListener(‘touchstart’,e=>{e.preventDefault();if(state===‘title’||state===‘gameover’)startGame();},{passive:false});
+document.addEventListener(‘touchmove’,e=>e.preventDefault(),{passive:false});
+
+// スティック
+const stickArea=document.getElementById(‘stick-area’);
+const stickKnob=document.getElementById(‘stick-knob’);
+const shootBtn=document.getElementById(‘shoot-btn’);
+const stick={x:0,y:0,active:false,id:null};
+const KNOB_MAX=40;
+
+stickArea.addEventListener(‘touchstart’,e=>{
+e.preventDefault();
+const t=e.changedTouches[0];
+stick.id=t.identifier; stick.active=true;
+updateStick(t.clientX,t.clientY);
+},{passive:false});
+document.addEventListener(‘touchmove’,e=>{
+for(const t of e.changedTouches) if(t.identifier===stick.id) updateStick(t.clientX,t.clientY);
+},{passive:false});
+document.addEventListener(‘touchend’,e=>{
+for(const t of e.changedTouches) if(t.identifier===stick.id){
+stick.x=0;stick.y=0;stick.active=false;stick.id=null;
+stickKnob.style.transform=‘translate(-50%,-50%)’;
+}
+},{passive:false});
+
+function updateStick(cx,cy){
+const rect=stickArea.getBoundingClientRect();
+const ox=rect.left+rect.width/2, oy=rect.top+rect.height/2;
+let dx=cx-ox, dy=cy-oy;
+const dist=Math.sqrt(dx*dx+dy*dy);
+stick.x=dist>0?dx/Math.max(dist,60):0;
+stick.y=dist>0?dy/Math.max(dist,60):0;
+const nx=Math.max(-KNOB_MAX,Math.min(KNOB_MAX,dx));
+const ny=Math.max(-KNOB_MAX,Math.min(KNOB_MAX,dy));
+stickKnob.style.transform=`translate(calc(-50% + ${nx}px),calc(-50% + ${ny}px))`;
+}
+
+// 射撃ボタン
+let shootPressed=false;
+shootBtn.addEventListener(‘touchstart’,e=>{e.preventDefault();shootPressed=true;shootBtn.classList.add(‘pressed’);if(state===‘title’||state===‘gameover’)startGame();},{passive:false});
+shootBtn.addEventListener(‘touchend’,e=>{e.preventDefault();shootPressed=false;shootBtn.classList.remove(‘pressed’);},{passive:false});
+
+// 弾
+let bullets=[];
+function spawnBullet(){
+bullets.push({x:player.x-10,y:player.y-10,vy:-12});
+bullets.push({x:player.x+10,y:player.y-10,vy:-12});
+}
+function drawBullet(b){
+ctx.save();
+const rx=4,ry=7;
+const g=ctx.createRadialGradient(b.x-1,b.y-2,0,b.x,b.y,ry);
+g.addColorStop(0,‘rgba(255,255,255,1)’);g.addColorStop(0.5,‘rgba(200,230,255,0.9)’);g.addColorStop(1,‘rgba(100,180,255,0.4)’);
+ctx.beginPath();ctx.ellipse(b.x,b.y,rx,ry,0,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
+ctx.beginPath();ctx.ellipse(b.x-1,b.y-3,1.5,2.5,0,0,Math.PI*2);ctx.fillStyle=‘rgba(255,255,255,0.9)’;ctx.fill();
+ctx.beginPath();ctx.moveTo(b.x-2,b.y+ry);ctx.lineTo(b.x,b.y+ry+8);ctx.lineTo(b.x+2,b.y+ry);
+ctx.fillStyle=‘rgba(180,220,255,0.3)’;ctx.fill();
+ctx.restore();
+}
+
+// なめこドット絵
+const NP=[‘transparent’,’#C47A28’,’#8B4E10’,’#E8A84A’,’#F5EDD4’,’#D4C4A0’,’#1A1A1A’,‘rgba(255,255,200,0.7)’,’#7A3A08’];
+const ND=[
+[0,0,0,0,0,0,3,3,3,3,0,0,0,0,0,0],[0,0,0,0,3,3,1,1,1,1,3,3,0,0,0,0],
+[0,0,0,3,1,1,1,3,3,1,1,1,3,0,0,0],[0,0,3,1,1,3,3,3,3,3,3,1,1,3,0,0],
+[0,3,1,1,3,3,3,1,1,3,3,3,1,1,3,0],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],
+[0,1,2,2,1,1,1,1,1,1,1,1,2,2,1,0],[0,8,2,2,2,2,2,2,2,2,2,2,2,2,8,0],
+[0,0,0,5,4,4,7,4,4,7,4,4,5,0,0,0],[0,0,0,5,4,6,6,4,4,6,6,4,5,0,0,0],
+[0,0,0,5,4,6,6,4,4,6,6,4,5,0,0,0],[0,0,0,5,4,4,4,4,4,4,4,4,5,0,0,0],
+[0,0,0,5,4,4,7,4,4,7,4,4,5,0,0,0],[0,0,0,0,5,5,5,5,5,5,5,5,0,0,0,0],
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+];
+function drawNameko(cx,cy,s,w=0){
+const ox=cx-8*s+w, oy=cy-8*s;
+ctx.save();
+for(let r=0;r<16;r++) for(let c=0;c<16;c++){
+const p=ND[r][c]; if(!p)continue;
+ctx.fillStyle=NP[p];
+ctx.fillRect(Math.round(ox+c*s),Math.round(oy+r*s),s,s);
+}
+ctx.restore();
+}
+
+// 敵
+let enemies=[], enemySpawnTimer=0, enemySpawnRate=90;
+function spawnEnemy(){
+const s=2+Math.random()*1.5;
+enemies.push({x:30+Math.random()*(GAME_W-60),y:-40,vy:0.8+Math.random()*1.2,vx:(Math.random()-0.5)*0.8,scale:s,r:s*7,wigglePhase:Math.random()*Math.PI*2,hp:1});
+}
+
+// 爆発
+let particles=[];
+function spawnExplosion(x,y){
+const cols=[’#C47A28’,’#E8A84A’,’#8B4E10’,’#F5EDD4’,’#D4C4A0’,’#FFEB99’];
+const n=12+Math.floor(Math.random()*6);
+for(let i=0;i<n;i++){
+const a=(Math.PI*2/n)*i+Math.random()*0.5, sp=1.5+Math.random()*3.5;
+particles.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-1.5,r:3+Math.random()*4,color:cols[Math.floor(Math.random()*cols.length)],life:1,decay:0.03+Math.random()*0.03,sx:0.7+Math.random()*0.6,sy:0.7+Math.random()*0.6});
+}
+particles.push({x,y,vx:0,vy:0,r:18,color:‘rgba(255,255,200,0.8)’,life:1,decay:0.12,sx:1,sy:1,flash:true});
+}
+
+// 機体描画
+function drawPlayer(){
+if(player.invincible>0&&Math.floor(frameCount/4)%2===0)return;
+ctx.save(); ctx.translate(player.x,player.y);
+const fh=10+Math.sin(frameCount*0.3)*5;
+[-18,18].forEach(ex=>{
+const g=ctx.createLinearGradient(ex,20,ex,20+fh+10);
+g.addColorStop(0,‘rgba(255,200,80,0.9)’);g.addColorStop(0.4,‘rgba(255,100,20,0.7)’);g.addColorStop(1,‘rgba(255,50,0,0)’);
+ctx.beginPath();ctx.moveTo(ex-5,20);ctx.lineTo(ex,20+fh+10);ctx.lineTo(ex+5,20);ctx.fillStyle=g;ctx.fill();
+});
+const bg=ctx.createLinearGradient(-12,-30,12,-30);
+bg.addColorStop(0,’#d0e8ff’);bg.addColorStop(0.4,’#ffffff’);bg.addColorStop(1,’#a8c8e8’);
+ctx.beginPath();ctx.moveTo(0,-32);ctx.bezierCurveTo(8,-25,12,-10,12,10);ctx.lineTo(12,18);ctx.lineTo(-12,18);ctx.lineTo(-12,10);ctx.bezierCurveTo(-12,-10,-8,-25,0,-32);ctx.fillStyle=bg;ctx.fill();ctx.strokeStyle=’#6899bb’;ctx.lineWidth=0.8;ctx.stroke();
+[[-1],[1]].forEach(([side])=>{
+const wg=ctx.createLinearGradient(side*12,0,side*36,8);wg.addColorStop(0,’#b8d8f0’);wg.addColorStop(1,’#7aaac8’);
+ctx.beginPath();ctx.moveTo(side*12,-5);ctx.lineTo(side*38,8);ctx.lineTo(side*30,14);ctx.lineTo(side*12,8);ctx.closePath();ctx.fillStyle=wg;ctx.fill();ctx.strokeStyle=’#5588aa’;ctx.lineWidth=0.5;ctx.stroke();
+ctx.beginPath();ctx.moveTo(side*38,8);ctx.lineTo(side*40,4);ctx.lineTo(side*38,2);ctx.closePath();ctx.fillStyle=’#99bbdd’;ctx.fill();
+});
+[[-1],[1]].forEach(([side])=>{ctx.beginPath();ctx.moveTo(side*12,10);ctx.lineTo(side*22,16);ctx.lineTo(side*18,20);ctx.lineTo(side*12,17);ctx.closePath();ctx.fillStyle=’#a0c0de’;ctx.fill();});
+ctx.beginPath();ctx.moveTo(0,-10);ctx.lineTo(0,-22);ctx.lineTo(5,-8);ctx.closePath();ctx.fillStyle=’#c0ddf0’;ctx.fill();
+[-18,18].forEach(ex=>{ctx.beginPath();ctx.ellipse(ex,8,5,7,0,0,Math.PI*2);ctx.fillStyle=’#8aabcc’;ctx.fill();ctx.strokeStyle=’#567890’;ctx.lineWidth=0.5;ctx.stroke();ctx.beginPath();ctx.ellipse(ex,14,3.5,2,0,0,Math.PI*2);ctx.fillStyle=’#223344’;ctx.fill();});
+ctx.fillStyle=’#88ccff’;
+for(let i=-2;i<=2;i++){ctx.beginPath();ctx.ellipse(i*4.5,-12,2,2.5,0,0,Math.PI*2);ctx.fill();}
+ctx.fillStyle=’#3366aa’;ctx.font=‘bold 6px sans-serif’;ctx.textAlign=‘center’;ctx.fillText(‘JET’,0,-2);
+ctx.restore();
+}
+
+// 背景
+const clouds=Array.from({length:8},()=>({x:Math.random()*GAME_W,y:Math.random()*GAME_H,w:60+Math.random()*100,h:25+Math.random()*30,speed:0.2+Math.random()*0.4,alpha:0.3+Math.random()*0.4}));
+function drawSky(){
+const g=ctx.createLinearGradient(0,0,0,GAME_H);g.addColorStop(0,’#0a2a6e’);g.addColorStop(0.5,’#1a6dbf’);g.addColorStop(1,’#5ba3e0’);ctx.fillStyle=g;ctx.fillRect(0,0,GAME_W,GAME_H);
+clouds.forEach(c=>{
+c.y+=c.speed;if(c.y>GAME_H+c.h){c.y=-c.h;c.x=Math.random()*GAME_W;}
+ctx.save();ctx.globalAlpha=c.alpha;ctx.fillStyle=’#fff’;
+[{ox:0,oy:0,rx:c.w*.4,ry:c.h*.4},{ox:c.w*.2,oy:c.h*.1,rx:c.w*.35,ry:c.h*.38},{ox:-c.w*.2,oy:c.h*.1,rx:c.w*.3,ry:c.h*.35},{ox:c.w*.4,oy:c.h*.2,rx:c.w*.2,ry:c.h*.25},{ox:-c.w*.4,oy:c.h*.2,rx:c.w*.22,ry:c.h*.25}]
+.forEach(p=>{ctx.beginPath();ctx.ellipse(c.x+p.ox,c.y+p.oy,p.rx,p.ry,0,0,Math.PI*2);ctx.fill();});
+ctx.restore();
+});
+}
+
+// HUD
+function drawHUD(){
+ctx.save();ctx.font=‘bold 22px “Segoe UI”,sans-serif’;ctx.textAlign=‘left’;ctx.fillStyle=’#fff’;ctx.shadowColor=’#000’;ctx.shadowBlur=4;ctx.fillText(‘🍄 ‘+score,12,36);ctx.font=‘14px “Segoe UI”,sans-serif’;ctx.fillStyle=’#ffd700’;ctx.fillText(’BEST ’+hiScore,12,58);ctx.restore();
+}
+
+function rrect(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();}
+
+// タイトル
+function drawTitle(){
+ctx.save();ctx.fillStyle=‘rgba(0,0,30,0.75)’;rrect(GAME_W/2-155,GAME_H/2-145,310,isTouch?290:260,16);ctx.fill();ctx.textAlign=‘center’;
+ctx.font=‘bold 26px “Meiryo”,sans-serif’;ctx.fillStyle=’#ffdd44’;ctx.shadowColor=’#ff8800’;ctx.shadowBlur=12;ctx.fillText(‘なめこシューティング’,GAME_W/2,GAME_H/2-100);ctx.shadowBlur=0;
+ctx.font=‘14px “Meiryo”,sans-serif’;ctx.fillStyle=’#ccddff’;
+if(isTouch){
+ctx.fillText(‘スティックで移動’,GAME_W/2,GAME_H/2-60);ctx.fillText(‘🔫 ボタンで射撃’,GAME_W/2,GAME_H/2-34);ctx.fillText(‘なめこを全部倒せ！’,GAME_W/2,GAME_H/2-8);
+ctx.fillStyle=’#44ff88’;ctx.font=‘bold 17px “Segoe UI”,sans-serif’;ctx.fillText(‘画面タップでスタート’,GAME_W/2,GAME_H/2+40);
+}else{
+ctx.fillText(‘← → キーで移動’,GAME_W/2,GAME_H/2-60);ctx.fillText(‘スペースキーで射撃’,GAME_W/2,GAME_H/2-34);ctx.fillText(‘なめこを全部倒せ！’,GAME_W/2,GAME_H/2-8);
+ctx.fillStyle=’#44ff88’;ctx.font=‘bold 17px “Segoe UI”,sans-serif’;ctx.fillText(’[ SPACE ] でスタート’,GAME_W/2,GAME_H/2+40);
+}
+drawNameko(GAME_W/2-80,GAME_H/2-105,2.5);drawNameko(GAME_W/2+80,GAME_H/2-105,2.5);
+ctx.restore();
+}
+
+// ゲームオーバー
+function drawGameOver(){
+ctx.save();ctx.fillStyle=‘rgba(80,0,0,0.78)’;rrect(GAME_W/2-155,GAME_H/2-120,310,240,16);ctx.fill();ctx.textAlign=‘center’;
+ctx.font=‘bold 36px “Meiryo”,sans-serif’;ctx.fillStyle=’#ff4444’;ctx.shadowColor=’#ff0000’;ctx.shadowBlur=16;ctx.fillText(‘GAME OVER’,GAME_W/2,GAME_H/2-60);ctx.shadowBlur=0;
+ctx.font=‘bold 22px “Segoe UI”,sans-serif’;ctx.fillStyle=’#ffffaa’;ctx.fillText(‘スコア : ‘+score,GAME_W/2,GAME_H/2-14);
+ctx.font=‘16px “Segoe UI”,sans-serif’;ctx.fillStyle=’#ffcc44’;ctx.fillText(‘ベスト : ‘+hiScore,GAME_W/2,GAME_H/2+18);
+ctx.fillStyle=’#aaffcc’;ctx.font=‘bold 15px “Segoe UI”,sans-serif’;ctx.fillText(isTouch?‘画面タップでリトライ’:’[ SPACE ] でリトライ’,GAME_W/2,GAME_H/2+68);
+ctx.restore();
+}
+
+function circleHit(ax,ay,ar,bx,by,br){const dx=ax-bx,dy=ay-by;return dx*dx+dy*dy<(ar+br)*(ar+br);}
+
+function startGame(){score=0;frameCount=0;bullets=[];enemies=[];particles=[];enemySpawnTimer=0;enemySpawnRate=90;player.x=GAME_W/2;player.y=GAME_H-110;player.invincible=0;player.shootCooldown=0;state=‘play’;}
+
+function update(){
+if(state!==‘play’)return;
+frameCount++;
+const mx=(keys[‘ArrowLeft’]?-1:0)+(keys[‘ArrowRight’]?1:0)+stick.x;
+const my=(keys[‘ArrowUp’]?-1:0)+(keys[‘ArrowDown’]?1:0)+stick.y;
+player.x=Math.max(20,Math.min(GAME_W-20,player.x+mx*player.speed));
+player.y=Math.max(20,Math.min(GAME_H-20,player.y+my*player.speed));
+player.shootCooldown–;
+if((keys[‘Space’]||shootPressed)&&player.shootCooldown<=0){spawnBullet();player.shootCooldown=player.shootRate;}
+if(player.invincible>0)player.invincible–;
+bullets.forEach(b=>{b.y+=b.vy;});bullets=bullets.filter(b=>b.y>-20);
+enemySpawnTimer++;
+if(enemySpawnTimer>=enemySpawnRate){spawnEnemy();enemySpawnTimer=0;enemySpawnRate=Math.max(30,90-Math.floor(score/5));}
+enemies.forEach(e=>{e.x+=e.vx;e.y+=e.vy;if(e.x<e.r||e.x>GAME_W-e.r)e.vx*=-1;});
+enemies=enemies.filter(e=>e.y<GAME_H+60);
+enemies.forEach(e=>{bullets.forEach(b=>{if(b.hit)return;if(circleHit(b.x,b.y,5,e.x,e.y+e.scale*4,e.r*0.7)){b.hit=true;e.hp–;if(e.hp<=0){e.dead=true;spawnExplosion(e.x,e.y+e.scale*2);score++;if(score>hiScore)hiScore=score;}}});});
+bullets=bullets.filter(b=>!b.hit);enemies=enemies.filter(e=>!e.dead);
+if(player.invincible<=0){enemies.forEach(e=>{if(circleHit(player.x,player.y,16,e.x,e.y+e.scale*4,e.r*0.65)){spawnExplosion(e.x,e.y);e.dead=true;state=‘gameover’;}});enemies=enemies.filter(e=>!e.dead);}
+particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=0.08;p.life-=p.decay;});particles=particles.filter(p=>p.life>0);
+}
+
+function render(){
+drawSky();
+if(state===‘title’){drawTitle();return;}
+bullets.forEach(drawBullet);
+enemies.forEach(e=>{const w=Math.sin(frameCount*0.08+e.wigglePhase)*2;drawNameko(e.x,e.y,e.scale,w);});
+particles.forEach(p=>{
+ctx.save();ctx.globalAlpha=p.life;
+if(p.flash){const fg=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r);fg.addColorStop(0,p.color);fg.addColorStop(1,‘transparent’);ctx.fillStyle=fg;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();}
+else{ctx.translate(p.x,p.y);ctx.rotate(Math.atan2(p.vy,p.vx));ctx.scale(p.sx,p.sy);ctx.beginPath();ctx.ellipse(0,0,p.r*1.2,p.r*0.7,0,0,Math.PI*2);ctx.fillStyle=p.color;ctx.fill();}
+ctx.restore();
+});
+drawPlayer();drawHUD();
+if(state===‘gameover’)drawGameOver();
+}
+
+function loop(){update();render();requestAnimationFrame(loop);}
+loop();
+</script>
+
+</body>
+</html>
