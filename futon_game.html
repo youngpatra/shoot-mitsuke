@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>布団ちゃん雑談配信シミュレーター 〜同接10万人を目指せ〜</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&family=Kosugi+Maru&display=swap');
+
+:root {
+–bg: #0d0d0f;
+–panel: #16161a;
+–panel2: #1e1e24;
+–border: #2a2a35;
+–accent: #7b5cf5;
+–accent2: #e84393;
+–gold: #f5c842;
+–red: #ff3b3b;
+–green: #3bff8a;
+–blue: #3bc8ff;
+–white: #f0eef8;
+–gray: #7070a0;
+–live: #ff4040;
+}
+
+- { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+background: var(–bg);
+color: var(–white);
+font-family: ‘M PLUS Rounded 1c’, sans-serif;
+height: 100vh;
+overflow: hidden;
+display: flex;
+flex-direction: column;
+user-select: none;
+}
+
+/* ===== TITLE SCREEN ===== */
+#title-screen {
+position: fixed; inset: 0;
+background: radial-gradient(ellipse at 50% 40%, #1a0d2e 0%, #0a0a0f 70%);
+display: flex; flex-direction: column;
+align-items: center; justify-content: center;
+z-index: 1000;
+gap: 0;
+}
+.title-badge {
+font-size: 11px; letter-spacing: 4px; color: var(–accent);
+text-transform: uppercase; margin-bottom: 16px;
+border: 1px solid var(–accent); padding: 4px 14px; border-radius: 20px;
+}
+.title-main {
+font-size: clamp(28px, 6vw, 56px);
+font-weight: 900;
+background: linear-gradient(135deg, #c084fc, #e879f9, #f472b6);
+-webkit-background-clip: text; -webkit-text-fill-color: transparent;
+text-align: center; line-height: 1.2;
+text-shadow: none;
+margin-bottom: 10px;
+}
+.title-sub {
+font-size: clamp(13px, 2.5vw, 18px);
+color: var(–gold); letter-spacing: 2px; margin-bottom: 48px;
+font-weight: 700;
+}
+.avatar-preview {
+font-size: 80px; margin-bottom: 32px;
+animation: float 3s ease-in-out infinite;
+filter: drop-shadow(0 0 30px rgba(123,92,245,0.6));
+}
+@keyframes float {
+0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)}
+}
+#start-btn {
+background: linear-gradient(135deg, var(–accent), var(–accent2));
+color: white; border: none; padding: 16px 56px;
+font-family: ‘M PLUS Rounded 1c’, sans-serif;
+font-size: 18px; font-weight: 900;
+border-radius: 50px; cursor: pointer;
+box-shadow: 0 0 40px rgba(123,92,245,0.5);
+transition: all 0.2s; letter-spacing: 2px;
+animation: pulse-btn 2s ease-in-out infinite;
+}
+@keyframes pulse-btn {
+0%,100%{box-shadow:0 0 40px rgba(123,92,245,0.5)}
+50%{box-shadow:0 0 60px rgba(232,67,147,0.7)}
+}
+#start-btn:hover { transform: scale(1.06); }
+
+/* ===== MAIN GAME LAYOUT ===== */
+#game {
+display: none;
+height: 100vh;
+flex-direction: column;
+}
+
+/* TOP BAR */
+#top-bar {
+background: #0a0a0d;
+border-bottom: 1px solid var(–border);
+padding: 6px 16px;
+display: flex; align-items: center; gap: 12px;
+flex-shrink: 0;
+}
+.live-dot {
+background: var(–live); color: white;
+font-size: 10px; font-weight: 900; padding: 3px 8px;
+border-radius: 3px; letter-spacing: 1px;
+animation: blink 1s step-end infinite;
+}
+@keyframes blink { 50%{opacity:0.4} }
+#top-bar .stream-title {
+font-size: 13px; color: var(–white); font-weight: 700;
+flex: 1;
+}
+#top-bar .timer {
+font-size: 12px; color: var(–gray); font-family: monospace;
+}
+.viewer-badge {
+background: var(–panel2); border: 1px solid var(–border);
+padding: 3px 10px; border-radius: 4px;
+font-size: 12px; color: var(–gold); font-weight: 900;
+}
+
+/* MAIN CONTENT */
+#main-content {
+flex: 1;
+display: grid;
+grid-template-columns: 1fr 300px;
+grid-template-rows: 1fr auto;
+gap: 0;
+overflow: hidden;
+min-height: 0;
+}
+
+/* CENTER: STREAM VIEW */
+#stream-view {
+background: #0a0a10;
+border-right: 1px solid var(–border);
+display: flex; flex-direction: column;
+padding: 20px;
+gap: 16px;
+overflow: hidden;
+grid-row: 1;
+}
+
+/* AVATAR AREA */
+#avatar-area {
+display: flex;
+align-items: center;
+justify-content: center;
+flex: 1;
+position: relative;
+}
+#avatar-bg {
+position: absolute; inset: 0;
+background: radial-gradient(ellipse at 50% 60%, #1a0d2e 0%, transparent 70%);
+}
+#avatar-display {
+font-size: clamp(60px, 12vw, 100px);
+position: relative; z-index: 1;
+transition: all 0.3s ease;
+filter: drop-shadow(0 0 20px rgba(123,92,245,0.4));
+}
+#avatar-state-label {
+position: absolute; bottom: 8px; left: 50%;
+transform: translateX(-50%);
+font-size: 11px; color: var(–gray); letter-spacing: 2px;
+background: rgba(0,0,0,0.6); padding: 2px 10px; border-radius: 10px;
+}
+#speech-bubble {
+position: absolute; top: 10%;
+background: var(–panel2); border: 1px solid var(–border);
+border-radius: 12px; padding: 10px 16px;
+max-width: 280px; font-size: 13px; line-height: 1.5;
+color: var(–white); opacity: 0;
+transition: opacity 0.3s;
+z-index: 2;
+pointer-events: none;
+}
+#speech-bubble.show { opacity: 1; }
+#speech-bubble::after {
+content: ‘’;
+position: absolute; bottom: -8px; left: 24px;
+border: 8px solid transparent;
+border-top-color: var(–border);
+}
+
+/* STATS ROW */
+#stats-row {
+display: flex; gap: 10px; flex-shrink: 0;
+}
+.stat-card {
+background: var(–panel); border: 1px solid var(–border);
+border-radius: 8px; padding: 8px 14px; flex: 1;
+}
+.stat-card .s-label {
+font-size: 9px; color: var(–gray); letter-spacing: 2px; text-transform: uppercase;
+margin-bottom: 4px;
+}
+.stat-card .s-value {
+font-size: 14px; font-weight: 900;
+}
+.stat-card .s-bar {
+height: 3px; background: #222; border-radius: 2px; margin-top: 4px;
+}
+.stat-card .s-fill {
+height: 100%; border-radius: 2px;
+transition: width 0.5s ease;
+}
+
+/* CHOICES */
+#choices-area {
+grid-column: 1;
+grid-row: 2;
+background: var(–panel);
+border-top: 1px solid var(–border);
+border-right: 1px solid var(–border);
+padding: 12px 16px;
+display: flex; flex-direction: column; gap: 8px;
+}
+#choices-label {
+font-size: 10px; color: var(–gray); letter-spacing: 3px;
+text-transform: uppercase; margin-bottom: 2px;
+}
+#choices-grid {
+display: grid; grid-template-columns: 1fr 1fr;
+gap: 6px;
+}
+.choice-btn {
+background: var(–panel2); border: 1px solid var(–border);
+border-left: 3px solid var(–accent);
+color: var(–white); font-family: ‘M PLUS Rounded 1c’, sans-serif;
+font-size: 12px; padding: 10px 12px;
+text-align: left; cursor: pointer;
+transition: all 0.15s ease; border-radius: 4px;
+line-height: 1.4;
+}
+.choice-btn:hover {
+background: #2a1a4a; border-left-color: var(–accent2);
+color: #f0c0ff; transform: translateY(-1px);
+}
+.choice-btn .c-num {
+color: var(–accent); font-weight: 900; margin-right: 6px; font-size: 11px;
+}
+
+/* COMMENT SECTION */
+#comment-section {
+grid-row: 1 / 3;
+display: flex; flex-direction: column;
+background: var(–panel);
+overflow: hidden;
+}
+#comment-header {
+padding: 10px 14px;
+border-bottom: 1px solid var(–border);
+display: flex; align-items: center; gap: 8px;
+flex-shrink: 0;
+}
+#comment-header .ch-title {
+font-size: 12px; font-weight: 700; color: var(–white);
+}
+#comment-header .ch-count {
+font-size: 11px; color: var(–gray); margin-left: auto;
+}
+#comment-list {
+flex: 1; overflow-y: auto; padding: 8px 0;
+display: flex; flex-direction: column;
+gap: 0;
+scroll-behavior: smooth;
+}
+#comment-list::-webkit-scrollbar { width: 4px; }
+#comment-list::-webkit-scrollbar-track { background: transparent; }
+#comment-list::-webkit-scrollbar-thumb { background: var(–border); border-radius: 2px; }
+
+.comment-item {
+padding: 5px 14px;
+display: flex; align-items: flex-start; gap: 8px;
+animation: commentIn 0.25s ease;
+border-left: 2px solid transparent;
+transition: background 0.2s;
+font-size: 12px;
+line-height: 1.5;
+}
+@keyframes commentIn {
+from { opacity:0; transform: translateX(10px); }
+to { opacity:1; transform: none; }
+}
+.comment-item:hover { background: rgba(255,255,255,0.03); }
+.comment-item.superchat {
+background: linear-gradient(90deg, rgba(245,200,66,0.12) 0%, transparent 100%);
+border-left-color: var(–gold);
+}
+.comment-item.troll {
+border-left-color: var(–red);
+background: rgba(255,59,59,0.05);
+}
+.comment-item.kamisama {
+border-left-color: var(–green);
+background: rgba(59,255,138,0.05);
+}
+.c-avatar {
+width: 20px; height: 20px; border-radius: 50%;
+display: flex; align-items: center; justify-content: center;
+font-size: 11px; flex-shrink: 0; margin-top: 1px;
+}
+.c-name { font-size: 10px; font-weight: 700; margin-right: 6px; }
+.c-text { color: #ccc; }
+.c-badge {
+font-size: 9px; padding: 1px 5px; border-radius: 3px;
+font-weight: 700; margin-right: 4px; flex-shrink: 0;
+}
+
+/* NOTIFICATION TOAST */
+#toast {
+position: fixed; top: 16px; right: 16px;
+background: var(–panel2); border: 1px solid var(–border);
+border-left: 3px solid var(–accent);
+padding: 10px 16px; border-radius: 6px;
+font-size: 13px; font-weight: 700;
+z-index: 500; transform: translateX(200%);
+transition: transform 0.3s ease;
+max-width: 260px;
+}
+#toast.show { transform: translateX(0); }
+
+/* EVENT MODAL */
+#event-modal {
+position: fixed; inset: 0;
+background: rgba(0,0,0,0.85);
+display: none; align-items: center; justify-content: center;
+z-index: 600;
+}
+#event-modal.show { display: flex; }
+.event-box {
+background: var(–panel2); border: 1px solid var(–border);
+border-top: 3px solid var(–accent);
+padding: 24px 28px; border-radius: 12px;
+max-width: 400px; width: 90%;
+animation: popIn 0.3s ease;
+}
+@keyframes popIn {
+from { transform: scale(0.9); opacity: 0; }
+to { transform: scale(1); opacity: 1; }
+}
+.event-type { font-size: 10px; letter-spacing: 3px; color: var(–accent); margin-bottom: 8px; }
+.event-title { font-size: 20px; font-weight: 900; margin-bottom: 8px; }
+.event-desc { font-size: 13px; color: #aaa; margin-bottom: 20px; line-height: 1.6; }
+.event-choices { display: flex; flex-direction: column; gap: 8px; }
+.event-choice {
+background: var(–panel); border: 1px solid var(–border);
+border-left: 3px solid var(–accent);
+color: var(–white); font-family: ‘M PLUS Rounded 1c’, sans-serif;
+font-size: 13px; padding: 12px 16px; text-align: left;
+cursor: pointer; border-radius: 4px;
+transition: all 0.15s;
+}
+.event-choice:hover { background: #2a1a4a; border-left-color: var(–accent2); }
+
+/* ENDING SCREEN */
+#ending-screen {
+display: none; position: fixed; inset: 0;
+background: #000; z-index: 900;
+align-items: center; justify-content: center;
+flex-direction: column; text-align: center;
+gap: 12px;
+}
+#ending-screen.show { display: flex; animation: fadeIn 1s ease; }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+.ending-emoji { font-size: 80px; margin-bottom: 8px; }
+.ending-title {
+font-size: 36px; font-weight: 900;
+background: linear-gradient(135deg, #c084fc, #f472b6);
+-webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.ending-sub { font-size: 16px; color: var(–gray); }
+.ending-peak { font-size: 22px; font-weight: 900; color: var(–gold); }
+#play-again {
+margin-top: 24px;
+background: linear-gradient(135deg, var(–accent), var(–accent2));
+color: white; border: none; padding: 14px 40px;
+font-family: ‘M PLUS Rounded 1c’, sans-serif;
+font-size: 16px; font-weight: 900; border-radius: 50px;
+cursor: pointer; transition: transform 0.2s;
+}
+#play-again:hover { transform: scale(1.05); }
+
+/* SLEEP OVERLAY */
+#sleep-overlay {
+display: none; position: fixed; inset: 0;
+background: rgba(0,0,0,0.92); z-index: 700;
+align-items: center; justify-content: center;
+flex-direction: column; gap: 16px;
+}
+#sleep-overlay.show { display: flex; }
+.sleep-countdown {
+font-size: 48px; font-weight: 900; color: var(–red);
+animation: countPulse 1s ease-in-out infinite;
+}
+@keyframes countPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
+
+/* SCROLLBAR for comment */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #333; }
+</style>
+
+</head>
+<body>
+
+<!-- TITLE SCREEN -->
+
+<div id="title-screen">
+  <div class="title-badge">OPENREC SIMULATOR</div>
+  <div class="avatar-preview">🛌</div>
+  <div class="title-main">布団ちゃん<br>雑談配信シミュレーター</div>
+  <div class="title-sub">〜 同接10万人を目指せ 〜</div>
+  <button id="start-btn" onclick="startGame()">▶ 配信開始</button>
+</div>
+
+<!-- MAIN GAME -->
+
+<div id="game">
+  <!-- TOP BAR -->
+  <div id="top-bar">
+    <span class="live-dot">● LIVE</span>
+    <span class="stream-title" id="stream-title">雑談配信　〜今日もダラダラいくか〜</span>
+    <span class="timer" id="timer">00:00</span>
+    <span class="viewer-badge">👁 <span id="viewer-count">0</span></span>
+  </div>
+
+  <!-- MAIN CONTENT -->
+
+  <div id="main-content">
+    <!-- STREAM VIEW -->
+    <div id="stream-view">
+      <div id="avatar-area">
+        <div id="avatar-bg"></div>
+        <div id="avatar-display">😐</div>
+        <div id="avatar-state-label">普通</div>
+        <div id="speech-bubble"></div>
+      </div>
+
+```
+  <div id="stats-row">
+    <div class="stat-card">
+      <div class="s-label">同接</div>
+      <div class="s-value" id="stat-viewers" style="color:var(--gold)">0</div>
+      <div class="s-bar"><div class="s-fill" id="bar-viewers" style="width:0%;background:var(--gold)"></div></div>
+    </div>
+    <div class="stat-card">
+      <div class="s-label">炎上ゲージ</div>
+      <div class="s-value" id="stat-flare" style="color:var(--red)">0</div>
+      <div class="s-bar"><div class="s-fill" id="bar-flare" style="width:0%;background:var(--red)"></div></div>
+    </div>
+    <div class="stat-card">
+      <div class="s-label">疲労ゲージ</div>
+      <div class="s-value" id="stat-fatigue" style="color:var(--blue)">0</div>
+      <div class="s-bar"><div class="s-fill" id="bar-fatigue" style="width:0%;background:var(--blue)"></div></div>
+    </div>
+    <div class="stat-card">
+      <div class="s-label">好感度</div>
+      <div class="s-value" id="stat-love" style="color:var(--accent2)">50</div>
+      <div class="s-bar"><div class="s-fill" id="bar-love" style="width:50%;background:var(--accent2)"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- CHOICES -->
+<div id="choices-area">
+  <div id="choices-label">返答を選べ</div>
+  <div id="choices-grid"></div>
+</div>
+
+<!-- COMMENT SECTION -->
+<div id="comment-section">
+  <div id="comment-header">
+    <span>💬</span>
+    <span class="ch-title">コメント</span>
+    <span class="ch-count" id="comment-count">0件</span>
+  </div>
+  <div id="comment-list"></div>
+</div>
+```
+
+  </div>
+</div>
+
+<!-- TOAST -->
+
+<div id="toast"></div>
+
+<!-- EVENT MODAL -->
+
+<div id="event-modal">
+  <div class="event-box">
+    <div class="event-type" id="ev-type">EVENT</div>
+    <div class="event-title" id="ev-title"></div>
+    <div class="event-desc" id="ev-desc"></div>
+    <div class="event-choices" id="ev-choices"></div>
+  </div>
+</div>
+
+<!-- SLEEP OVERLAY -->
+
+<div id="sleep-overlay">
+  <div style="font-size:60px">😴💤</div>
+  <div style="font-size:22px;font-weight:900;color:var(--white)">布団ちゃん寝落ちした！！</div>
+  <div style="color:var(--gray);font-size:14px">「布団ちゃん？！」「寝てる？」「起きてくれ！！」</div>
+  <div class="sleep-countdown" id="sleep-countdown">30</div>
+  <div style="color:var(--gray);font-size:12px">秒以内に起きないと同接半減！</div>
+  <button onclick="wakeUp()" style="background:var(--accent);color:white;border:none;padding:14px 40px;font-size:16px;font-weight:900;border-radius:50px;cursor:pointer;font-family:'M PLUS Rounded 1c',sans-serif">
+    😤 「すまんすまん！」起きる
+  </button>
+</div>
+
+<!-- ENDING SCREEN -->
+
+<div id="ending-screen">
+  <div class="ending-emoji" id="end-emoji">🏆</div>
+  <div class="ending-title" id="end-title">配信終了</div>
+  <div class="ending-sub" id="end-sub"></div>
+  <div class="ending-peak" id="end-peak"></div>
+  <button id="play-again" onclick="location.reload()">もう一度配信する</button>
+</div>
+
+<script>
+// ===== GAME STATE =====
+let G = {
+  viewers: 500,
+  peakViewers: 500,
+  flare: 0,
+  fatigue: 0,
+  love: 50,
+  totalComments: 0,
+  elapsed: 0, // seconds
+  phase: 0, // 0-5 phases of stream
+  sleeping: false,
+  sleepTimer: null,
+  sleepCountdown: 30,
+  streamEnded: false,
+  superchats: 0,
+  totalDonation: 0,
+};
+
+// ===== TIMER =====
+let timerInterval;
+function startTimer() {
+  timerInterval = setInterval(() => {
+    G.elapsed++;
+    const m = String(Math.floor(G.elapsed/60)).padStart(2,'0');
+    const s = String(G.elapsed%60).padStart(2,'0');
+    document.getElementById('timer').textContent = `${m}:${s}`;
+
+    // natural viewer fluctuation
+    if (G.elapsed % 15 === 0) naturalDrift();
+    // fatigue increases over time
+    if (G.elapsed % 30 === 0) {
+      G.fatigue = Math.min(100, G.fatigue + 3);
+      updateStats();
+    }
+    // check sleep
+    if (G.fatigue >= 100 && !G.sleeping) triggerSleep();
+    // check ending (30 min)
+    if (G.elapsed >= 1800) endStream();
+    // phase advancement
+    const phase = Math.floor(G.elapsed / 360);
+    if (phase !== G.phase && phase <= 5) {
+      G.phase = phase;
+      triggerPhaseEvent();
+    }
+  }, 1000);
+}
+
+function naturalDrift() {
+  const delta = Math.floor((Math.random() - 0.4) * 200 * (G.love / 100));
+  G.viewers = Math.max(100, G.viewers + delta);
+  if (G.viewers > G.peakViewers) G.peakViewers = G.viewers;
+  updateStats();
+  document.getElementById('viewer-count').textContent = G.viewers.toLocaleString();
+}
+
+// ===== COMMENT GENERATION =====
+const USERNAMES = [
+  'ワキガキ太郎','おにや推し','加藤純一bot','魔神信者','布団教信者',
+  'パチスロガチ勢','元作業療法士','OPENREC民','スパチャマン',
+  'ザナルカンド高田','布団ちゃんの嫁','ノンデリクソ','うんこちゃん弟子',
+  'ワキガール花子','来店演者ファン','魔神の食卓民','蛇鳥ファン',
+  'エビデンスマン','お前ら系','同接警察','コメ民A','コメ民B','コメ民C',
+  'OPENREC廃人','布団ちゃん大好き','激辛リスナー','スロ仲間',
+];
+
+const NORMAL_COMMENTS = [
+  'www','草','布団ちゃん好きwww','それなwww','ほんとそれ',
+  '今日も来た！','待ってたわ','神回の予感','笑った','ヤバwww',
+  '布団ちゃんらしいな','また始まった','そんなんあるんだwww',
+  '今日の布団ちゃん良い感じ','何時まで？','声すき',
+  'テンション高いな今日','ゆっくりしてw','深夜勢ここ',
+  'リアタイ間に合った','おはよう布団ちゃん','お疲れ',
+  'それ前も言ってたwww','その話詳しく！','マジで？',
+  '布団ちゃん天才','なんで知ってんだよw','うわー',
+  'エビデンスは？','データは？','ノンデリwww',
+  'また寝そう','眠そうじゃん','起きてる？',
+  '今日の飯何食った','料理配信してくれ','魔神の一皿',
+  'OPENREC最高','スパチャ打てる人うらやましい','来週も来ます',
+];
+
+const PACHO_COMMENTS = [
+  'パチスロ行ったの？','また負けた？','回胴録待ってる',
+  'スロ配信してくれ','来店告知来た','パチンコ部門代表www',
+  '今日は勝ったの？','スロ民ここ','設定6引いてくれ',
+  'パチンコの案件でしょｗ','ストリーマー回胴録好きだわ',
+];
+
+const TROLL_COMMENTS = [
+  'つまんね','声きも','何が面白いんだろ','帰っていい？',
+  'もっとおもしろいことしろや','延々同じ話してる','飽きた',
+  'なんか変わった？','昔の方が良かったわ',
+];
+
+const KAMIS = [
+  'その話もっと詳しく聞きたい！','これ神回じゃん','今の話最高だった',
+  'それ俺も気になってた！','布団ちゃんのその考え方好き',
+  '今日の布団ちゃん一番面白い','ずっと見てる', 'めっちゃわかる',
+];
+
+const SUPERCHAT_MSGS = [
+  '毎回楽しませてもらってます！','いつもありがとう！',
+  '神回確定！','布団ちゃん最高！これからも応援してます',
+  '今日の配信のために生きてます','ワキガキ代表として',
+];
+
+const SC_AMOUNTS = [500,500,1000,1000,1000,3000,5000,10000];
+
+let commentCount = 0;
+function addComment(type = 'normal', text = null, name = null, amount = null) {
+  if (G.streamEnded) return;
+  const list = document.getElementById('comment-list');
+  const item = document.createElement('div');
+  item.className = 'comment-item ' + type;
+
+  const colors = ['#c084fc','#f472b6','#38bdf8','#4ade80','#fbbf24','#fb7185','#a3e635'];
+  const color = colors[Math.floor(Math.random()*colors.length)];
+  const uname = name || USERNAMES[Math.floor(Math.random()*USERNAMES.length)];
+  let msg = text;
+  if (!msg) {
+    if (type === 'troll') msg = TROLL_COMMENTS[Math.floor(Math.random()*TROLL_COMMENTS.length)];
+    else if (type === 'kamisama') msg = KAMIS[Math.floor(Math.random()*KAMIS.length)];
+    else if (type === 'pacho') msg = PACHO_COMMENTS[Math.floor(Math.random()*PACHO_COMMENTS.length)];
+    else msg = NORMAL_COMMENTS[Math.floor(Math.random()*NORMAL_COMMENTS.length)];
+  }
+
+  let badgeHtml = '';
+  if (type === 'superchat') {
+    const amt = amount || SC_AMOUNTS[Math.floor(Math.random()*SC_AMOUNTS.length)];
+    badgeHtml = `<span class="c-badge" style="background:var(--gold);color:#000">¥${amt.toLocaleString()}</span>`;
+  } else if (type === 'troll') {
+    badgeHtml = `<span class="c-badge" style="background:var(--red);color:#fff">荒</span>`;
+  } else if (type === 'kamisama') {
+    badgeHtml = `<span class="c-badge" style="background:var(--green);color:#000">神</span>`;
+  }
+
+  item.innerHTML = `
+    <div class="c-avatar" style="background:${color}22;color:${color}">
+      ${uname.charAt(0)}
+    </div>
+    <div>
+      <span class="c-name" style="color:${color}">${uname}</span>
+      ${badgeHtml}<span class="c-text">${msg}</span>
+    </div>
+  `;
+  list.appendChild(item);
+
+  // auto scroll
+  list.scrollTop = list.scrollHeight;
+
+  // limit DOM
+  while (list.children.length > 80) list.removeChild(list.firstChild);
+
+  G.totalComments++;
+  document.getElementById('comment-count').textContent = G.totalComments + '件';
+}
+
+// ===== COMMENT STREAM =====
+let commentInterval;
+function startCommentStream() {
+  commentInterval = setInterval(() => {
+    if (G.sleeping || G.streamEnded) return;
+    const baseRate = Math.max(0.3, G.viewers / 5000);
+    if (Math.random() < baseRate * 0.7) addComment('normal');
+    if (Math.random() < 0.08) addComment('pacho');
+    if (Math.random() < 0.05 * (G.flare / 30 + 0.5)) addComment('troll');
+    if (Math.random() < 0.03) addComment('kamisama');
+    if (Math.random() < 0.015) triggerSuperchat();
+    if (Math.random() < 0.04 * (G.flare / 50 + 0.3)) triggerTrollEvent();
+  }, 800);
+}
+
+// ===== CHOICES SYSTEM =====
+const CHOICE_SETS = [
+  // Phase 0: intro
+  {
+    topic: '布団ちゃん「じゃあ雑談はじめるか。最近パチスロ行ってさ」',
+    avatar: '😐', state: '普通',
+    choices: [
+      { text: '「昨日もスロ行ってたわ。負けたけど」', delta:{viewers:+200,flare:+5,fatigue:+5,love:+8}, notify:'パチスロトーク開幕！同接UP', type:'good' },
+      { text: '「料理の話しよーか。昨日飯作った」', delta:{viewers:+400,flare:-5,fatigue:+3,love:+12}, notify:'魔神の食卓トーク！視聴者が集まる', type:'good' },
+      { text: '「お前らエビデンスある？（急に）」', delta:{viewers:+300,flare:+0,fatigue:+2,love:+10}, notify:'ノンデリトーク炸裂ｗ', type:'good' },
+      { text: '（黙ってポテチを食べ始める）', delta:{viewers:-100,flare:+10,fatigue:+8,love:-5}, notify:'無言配信…疲労上昇', type:'bad' },
+    ]
+  },
+  // Phase 1
+  {
+    topic: 'コメント:「また寝てた？」「遅くない？」',
+    avatar: '😐', state: '普通',
+    choices: [
+      { text: '「え？普通に起きてたし？（嘘）」', delta:{viewers:+150,flare:+5,fatigue:+3,love:+5}, notify:'バレバレの嘘にリスナー爆笑w', type:'good' },
+      { text: '「うるさいよお前ら！！ちゃんと起きてたから！！」', delta:{viewers:+500,flare:+15,fatigue:+5,love:+15}, notify:'怒り芸炸裂！同接急上昇！', type:'good', avatar:'😡', state:'キレ' },
+      { text: '「まあちょっと二度寝したかも」（正直）', delta:{viewers:+200,flare:-10,fatigue:+2,love:+10}, notify:'正直に話したら好感度UP', type:'good' },
+      { text: '「（聞こえてないふり）」', delta:{viewers:-200,flare:+20,fatigue:+5,love:-8}, notify:'無視は炎上を招く…', type:'bad' },
+    ]
+  },
+  // Phase 2
+  {
+    topic: '急に加藤純一の話題が出た「加藤さんどう思う？」',
+    avatar: '😐', state: '普通',
+    choices: [
+      { text: '「加藤さんはすごいよ。普通に」', delta:{viewers:+300,flare:-5,fatigue:+2,love:+10}, notify:'無難な回答で安定', type:'good' },
+      { text: '「加藤さんはまあ…でも俺も個人勢1位だし」', delta:{viewers:+600,flare:+10,fatigue:+3,love:+8}, notify:'自慢トーク！話題性UP！', type:'good' },
+      { text: '「それより俺のパチスロ聞いて」', delta:{viewers:+100,flare:+5,fatigue:+3,love:+3}, notify:'話をそらした…w', type:'normal' },
+      { text: '「え、なんで急にそれ？怖いんだけど」', delta:{viewers:+400,flare:+0,fatigue:+2,love:+12}, notify:'反応が面白い！', type:'good' },
+    ]
+  },
+  // Phase 3
+  {
+    topic: '疲れてきた…「眠いな正直」（疲労上昇中）',
+    avatar: '😐', state: '普通',
+    choices: [
+      { text: '「もう少しだけ続けるわ」（コーヒー飲む）', delta:{viewers:+100,flare:-5,fatigue:-20,love:+8}, notify:'踏ん張り！疲労回復', type:'good' },
+      { text: '「ちょっとトイレ行ってくる」（5分帰ってこない）', delta:{viewers:-300,flare:+15,fatigue:-10,love:-5}, notify:'長いトイレ…w', type:'bad' },
+      { text: '「眠い配信でもええやろ（開き直り）」', delta:{viewers:+200,flare:+5,fatigue:+5,love:+6}, notify:'開き直り芸！', type:'normal' },
+      { text: '「お前らが面白いこと言えよ（逆ギレ）」', delta:{viewers:+700,flare:+20,fatigue:+5,love:+10}, notify:'逆ギレ炸裂！同接爆上げ！', type:'good', avatar:'😡', state:'キレ' },
+    ]
+  },
+  // Phase 4
+  {
+    topic: '昔話「作業療法士やってた頃の話していい？」',
+    avatar: '😐', state: '普通',
+    choices: [
+      { text: '「患者さんに「エビデンスあるんすか？」って言ったことある（ノンデリ）」', delta:{viewers:+800,flare:+5,fatigue:+3,love:+20}, notify:'ノンデリ逸話！神コンテンツ！', type:'good', avatar:'😂', state:'爆笑' },
+      { text: '「普通に良い仕事だったよ。でも配信の方が楽しい」', delta:{viewers:+300,flare:-10,fatigue:+2,love:+15}, notify:'素直なトーク。好感度UP！', type:'good' },
+      { text: '「週1しか行ってなかったから詳しくないけど」', delta:{viewers:+200,flare:+5,fatigue:+2,love:+5}, notify:'正直すぎるw', type:'normal' },
+      { text: '（急にギター弾き始める）', delta:{viewers:+500,flare:-5,fatigue:-5,love:+18}, notify:'ギター配信！好感度大幅UP！', type:'good' },
+    ]
+  },
+  // Phase 5
+  {
+    topic: '終盤「そろそろ終わりにするか…いや、どうする？」',
+    avatar: '😐', state: '普通',
+    choices: [
+      { text: '「もう30分延長するか（サービス）」', delta:{viewers:+1000,flare:-10,fatigue:+20,love:+20}, notify:'延長戦！同接爆上げ！', type:'good' },
+      { text: '「終わります。ありがとう（素直）」', delta:{viewers:-200,flare:-20,fatigue:-10,love:+15}, notify:'綺麗な締め。好感度UP', type:'good' },
+      { text: '「じゃあスパチャ来たら続けるか」', delta:{viewers:+600,flare:+5,fatigue:+5,love:+10}, notify:'スパチャ狙い！w', type:'normal' },
+      { text: '（無言で配信を続ける）', delta:{viewers:+300,flare:+5,fatigue:+15,love:+3}, notify:'謎の沈黙…w', type:'normal' },
+    ]
+  },
+];
+
+let choiceIndex = 0;
+function loadNextChoices() {
+  const set = CHOICE_SETS[choiceIndex % CHOICE_SETS.length];
+  choiceIndex++;
+
+  // update avatar
+  setAvatar(set.avatar || '😐', set.state || '普通');
+  showSpeech(set.topic);
+
+  const grid = document.getElementById('choices-grid');
+  grid.innerHTML = '';
+  set.choices.forEach((c, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    btn.innerHTML = `<span class="c-num">${i+1}.</span>${c.text}`;
+    btn.onclick = () => selectChoice(c, set);
+    grid.appendChild(btn);
+  });
+}
+
+function selectChoice(choice, set) {
+  // Lock buttons
+  document.querySelectorAll('.choice-btn').forEach(b => b.disabled = true);
+
+  // Apply deltas
+  G.viewers = Math.max(100, G.viewers + (choice.delta.viewers || 0));
+  G.flare = Math.min(100, Math.max(0, G.flare + (choice.delta.flare || 0)));
+  G.fatigue = Math.min(100, Math.max(0, G.fatigue + (choice.delta.fatigue || 0)));
+  G.love = Math.min(100, Math.max(0, G.love + (choice.delta.love || 0)));
+  if (G.viewers > G.peakViewers) G.peakViewers = G.viewers;
+  updateStats();
+
+  if (choice.avatar) setAvatar(choice.avatar, choice.state);
+
+  // Add reaction comments
+  if (choice.type === 'good') {
+    setTimeout(() => addComment('kamisama'), 300);
+    setTimeout(() => addComment('normal'), 600);
+    setTimeout(() => addComment('normal'), 900);
+  } else if (choice.type === 'bad') {
+    setTimeout(() => addComment('troll'), 300);
+    setTimeout(() => addComment('troll'), 600);
+  }
+
+  showToast(choice.notify || '', choice.type);
+
+  // Check flare
+  if (G.flare >= 100) {
+    setTimeout(() => triggerFlareEvent(), 800);
+  } else {
+    setTimeout(() => loadNextChoices(), 2000);
+  }
+}
+
+// ===== EVENTS =====
+function triggerPhaseEvent() {
+  const phaseEvents = [
+    null,
+    { type:'スパチャ', title:'¥10,000 スパチャきたー！', desc:'「ワキガキ代表として布団ちゃんを応援します！！」\n\nどう返す？', choices:[
+      { text:'「ありがとう！マジで嬉しい！」（大げさに喜ぶ）', effect:{viewers:+500,love:+15,flare:-5} },
+      { text:'「え、ちょ待って。え？え？ありがとうっ！」（普通に感動）', effect:{viewers:+300,love:+20} },
+      { text:'（スルーしてパチスロの話を続ける）', effect:{viewers:-200,love:-10,flare:+10} },
+    ]},
+    { type:'神コメント', title:'「その話もっと詳しく聞きたい！」', desc:'神コメントが来た！うまく拾うと同接が大幅UP！', choices:[
+      { text:'「おっ聞きたいの？じゃあ話すわ（嬉しそうに）」', effect:{viewers:+2000,love:+15} },
+      { text:'「え、なんで？w でも話すか」', effect:{viewers:+1500,love:+10} },
+      { text:'「もういい話したから次の話いくわ」', effect:{viewers:-500,love:-5} },
+    ]},
+    { type:'荒らし対応', title:'「声きもwww」「つまんね」', desc:'荒らしが大量発生！対応を間違えると炎上する！', choices:[
+      { text:'「うるさいよお前ら！！帰れ！！」（本気でキレる）', effect:{viewers:+1000,flare:+20,love:+5} },
+      { text:'「はいはい、まあ楽しくやろーよ」（軽くあしらう）', effect:{viewers:+200,flare:-10,love:+8} },
+      { text:'「ほんとつまんないと思ったら帰っていいよ」', effect:{viewers:-300,flare:-5,love:+3} },
+    ]},
+    null,
+    null,
+  ];
+  const ev = phaseEvents[G.phase];
+  if (ev) showEventModal(ev);
+}
+
+function triggerSuperchat() {
+  const amt = SC_AMOUNTS[Math.floor(Math.random()*SC_AMOUNTS.length)];
+  const msg = SUPERCHAT_MSGS[Math.floor(Math.random()*SUPERCHAT_MSGS.length)];
+  addComment('superchat', msg, null, amt);
+  G.superchats++;
+  G.totalDonation += amt;
+  G.love = Math.min(100, G.love + 3);
+  G.viewers = Math.min(100000, G.viewers + 100);
+  updateStats();
+  showToast(`💰 ¥${amt.toLocaleString()} スパチャ！`, 'good');
+}
+
+function triggerTrollEvent() {
+  if (Math.random() < 0.3) {
+    addComment('troll');
+    addComment('troll');
+    addComment('troll');
+    G.flare = Math.min(100, G.flare + 5);
+    updateStats();
+  }
+}
+
+function triggerFlareEvent() {
+  showEventModal({
+    type: '🔥 炎上発生！',
+    title: '炎上ゲージMAX！！',
+    desc: 'コメントが荒れ始めた！\n「謝れ」「終わった」「やらかした」\nどう対処する？',
+    choices: [
+      { text: '「すみませんでした。俺が悪かった」（土下座謝罪）', effect:{viewers:-1000,flare:-80,love:+5} },
+      { text: '（完全無視してパチスロの話をする）', effect:{viewers:-2000,flare:-40,love:-20} },
+      { text: '「はいはい、俺が悪いって言えばいいんでしょ」（半ギレ謝罪）', effect:{viewers:+500,flare:-60,love:+0} },
+    ]
+  });
+}
+
+function triggerSleep() {
+  if (G.sleeping) return;
+  G.sleeping = true;
+  clearInterval(commentInterval);
+
+  setAvatar('😴', '寝落ち');
+
+  // spam sleep comments
+  const sleepMsgs = ['布団ちゃん？','寝てる？','布団ちゃん！！！','おーい','起きて！','ZZZ...','寝落ちしたwww','また！？','誰か起こせw'];
+  let i = 0;
+  const sleepCommentInterval = setInterval(() => {
+    if (!G.sleeping) { clearInterval(sleepCommentInterval); return; }
+    addComment('normal', sleepMsgs[i % sleepMsgs.length]);
+    i++;
+  }, 500);
+
+  G.sleepCountdown = 30;
+  document.getElementById('sleep-countdown').textContent = 30;
+  document.getElementById('sleep-overlay').classList.add('show');
+
+  G.sleepTimer = setInterval(() => {
+    G.sleepCountdown--;
+    document.getElementById('sleep-countdown').textContent = G.sleepCountdown;
+    if (G.sleepCountdown <= 0) {
+      clearInterval(G.sleepTimer);
+      clearInterval(sleepCommentInterval);
+      // halve viewers
+      G.viewers = Math.floor(G.viewers / 2);
+      G.sleeping = false;
+      document.getElementById('sleep-overlay').classList.remove('show');
+      updateStats();
+      showToast('💀 寝落ちで同接半減…', 'bad');
+      setAvatar('😐', '普通（起動）');
+      G.fatigue = 30;
+      startCommentStream();
+      loadNextChoices();
+    }
+  }, 1000);
+}
+
+function wakeUp() {
+  if (!G.sleeping) return;
+  clearInterval(G.sleepTimer);
+  G.sleeping = false;
+  document.getElementById('sleep-overlay').classList.remove('show');
+  G.fatigue = Math.max(0, G.fatigue - 40);
+  setAvatar('😐', 'なんとか起きた');
+  showToast('😤 なんとか起きた！', 'good');
+  updateStats();
+  addComment('normal', '起きたー！！w');
+  addComment('kamisama', 'よかったｗ 心配した');
+  startCommentStream();
+  loadNextChoices();
+}
+
+function showEventModal(ev) {
+  clearInterval(commentInterval);
+  document.getElementById('ev-type').textContent = ev.type;
+  document.getElementById('ev-title').textContent = ev.title;
+  document.getElementById('ev-desc').textContent = ev.desc;
+  const choicesDiv = document.getElementById('ev-choices');
+  choicesDiv.innerHTML = '';
+  ev.choices.forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = 'event-choice';
+    btn.textContent = c.text;
+    btn.onclick = () => {
+      applyEffect(c.effect);
+      document.getElementById('event-modal').classList.remove('show');
+      startCommentStream();
+      loadNextChoices();
+    };
+    choicesDiv.appendChild(btn);
+  });
+  document.getElementById('event-modal').classList.add('show');
+}
+
+function applyEffect(effect) {
+  if (effect.viewers) G.viewers = Math.max(100, G.viewers + effect.viewers);
+  if (effect.flare !== undefined) G.flare = Math.min(100, Math.max(0, G.flare + effect.flare));
+  if (effect.fatigue !== undefined) G.fatigue = Math.min(100, Math.max(0, G.fatigue + effect.fatigue));
+  if (effect.love !== undefined) G.love = Math.min(100, Math.max(0, G.love + effect.love));
+  if (G.viewers > G.peakViewers) G.peakViewers = G.viewers;
+  updateStats();
+}
+
+// ===== AVATAR =====
+const AVATAR_STATES = {
+  '😐': '普通', '😡': 'キレ', '😂': '爆笑', '😴': '寝落ち',
+  '🤔': '考え中', '😤': '本気', '🎸': 'ギター',
+};
+function setAvatar(emoji, label) {
+  document.getElementById('avatar-display').textContent = emoji;
+  document.getElementById('avatar-state-label').textContent = label || AVATAR_STATES[emoji] || '';
+}
+let speechTimeout;
+function showSpeech(text) {
+  const el = document.getElementById('speech-bubble');
+  el.textContent = text;
+  el.classList.add('show');
+  clearTimeout(speechTimeout);
+  speechTimeout = setTimeout(() => el.classList.remove('show'), 6000);
+}
+
+// ===== STATS UPDATE =====
+function updateStats() {
+  document.getElementById('stat-viewers').textContent = G.viewers.toLocaleString();
+  document.getElementById('stat-flare').textContent = G.flare;
+  document.getElementById('stat-fatigue').textContent = G.fatigue;
+  document.getElementById('stat-love').textContent = G.love;
+  document.getElementById('bar-viewers').style.width = Math.min(100, G.viewers/1000) + '%';
+  document.getElementById('bar-flare').style.width = G.flare + '%';
+  document.getElementById('bar-fatigue').style.width = G.fatigue + '%';
+  document.getElementById('bar-love').style.width = G.love + '%';
+  document.getElementById('viewer-count').textContent = G.viewers.toLocaleString();
+
+  // flare color warning
+  const flareBar = document.getElementById('bar-flare');
+  if (G.flare >= 80) flareBar.style.animation = 'blink 0.3s step-end infinite';
+  else flareBar.style.animation = '';
+}
+
+// ===== TOAST =====
+let toastTimeout;
+function showToast(msg, type) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.borderLeftColor = type === 'good' ? 'var(--green)' : type === 'bad' ? 'var(--red)' : 'var(--accent)';
+  el.classList.add('show');
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// ===== ENDING =====
+function endStream() {
+  if (G.streamEnded) return;
+  G.streamEnded = true;
+  clearInterval(timerInterval);
+  clearInterval(commentInterval);
+
+  const endScreen = document.getElementById('ending-screen');
+  endScreen.classList.add('show');
+
+  let emoji, title, sub;
+  if (G.peakViewers >= 100000) {
+    emoji = '🏆'; title = '伝説';
+    sub = '同接10万人突破！！！魔神、伝説となる！！';
+  } else if (G.peakViewers >= 50000) {
+    emoji = '👑'; title = '人気配信者';
+    sub = '同接5万人！完全にOPENREC頂点！';
+  } else if (G.peakViewers >= 20000) {
+    emoji = '🌟'; title = '神回認定';
+    sub = '同接2万人突破！これは神回だ！';
+  } else if (G.peakViewers >= 5000) {
+    emoji = '😎'; title = 'ノーマルエンド';
+    sub = '安定した良い配信だった。また明日。';
+  } else if (G.flare >= 80) {
+    emoji = '🔥'; title = '炎上エンド';
+    sub = 'やらかした……Twitterで謝罪文書くか。';
+  } else {
+    emoji = '😴'; title = '寝落ちエンド';
+    sub = '気づいたら朝だった。同接は窓の外に消えた。';
+  }
+
+  document.getElementById('end-emoji').textContent = emoji;
+  document.getElementById('end-title').textContent = title;
+  document.getElementById('end-sub').textContent = sub;
+  document.getElementById('end-peak').textContent =
+    `ピーク同接: ${G.peakViewers.toLocaleString()} 人 ／ スパチャ: ¥${G.totalDonation.toLocaleString()}`;
+}
+
+// ===== START =====
+function startGame() {
+  document.getElementById('title-screen').style.display = 'none';
+  document.getElementById('game').style.display = 'flex';
+
+  // Initial comment burst
+  setTimeout(() => {
+    addComment('normal', '来た！', 'ワキガキ太郎');
+    addComment('normal', 'おはよう布団ちゃん', 'ワキガール花子');
+    addComment('normal', '待ってたわ', 'OPENREC廃人');
+    addComment('kamisama', '布団ちゃん今日もよろしく！', '魔神信者');
+  }, 500);
+
+  startTimer();
+  startCommentStream();
+  loadNextChoices();
+  updateStats();
+
+  // Gradually ramp viewers
+  let ramp = setInterval(() => {
+    if (G.viewers < 800) {
+      G.viewers += 50;
+      updateStats();
+    } else clearInterval(ramp);
+  }, 200);
+}
+</script>
+
+</body>
+</html>
