@@ -2,941 +2,597 @@
 
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BreakingDown 面接オーディション</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Black+Han+Sans&display=swap');
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GAME ARCADE</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    /* ==============================
+       RESET & BASE
+    ============================== */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
+```
 :root {
-–red: #e8001a;
-–gold: #f5c518;
-–dark: #0a0a0a;
-–darker: #050505;
-–white: #f0f0f0;
-–gray: #888;
+  --bg:        #07080d;
+  --panel:     #0d0f18;
+  --border:    #1e2235;
+  --glow-r:    #ff2d55;
+  --glow-b:    #00d4ff;
+  --glow-g:    #39ff14;
+  --glow-y:    #ffe500;
+  --text:      #e8eaf0;
+  --muted:     #4a4e6a;
+  --mono:      'Share Tech Mono', monospace;
+  --display:   'Bebas Neue', sans-serif;
+  --body-f:    'Noto Sans JP', sans-serif;
 }
 
-- { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
 
 body {
-background: var(–darker);
-color: var(–white);
-font-family: ‘Noto Sans JP’, sans-serif;
-min-height: 100vh;
-overflow-x: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--body-f);
+  min-height: 100vh;
+  overflow-x: hidden;
+  cursor: crosshair;
 }
 
-/* SCANLINE EFFECT */
+/* ── CRT ノイズ・スキャンライン ── */
 body::before {
-content: ‘’;
-position: fixed;
-inset: 0;
-background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 4px);
-pointer-events: none;
-z-index: 9999;
+  content: '';
+  position: fixed; inset: 0; z-index: 9999;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 3px,
+      rgba(0,0,0,0.08) 3px,
+      rgba(0,0,0,0.08) 4px
+    );
+  animation: flicker 8s infinite;
+}
+@keyframes flicker {
+  0%,100%{ opacity:1 } 92%{ opacity:1 } 93%{ opacity:0.85 } 94%{ opacity:1 } 97%{ opacity:0.95 }
 }
 
-/* HEADER */
-#header {
-background: var(–dark);
-border-bottom: 3px solid var(–red);
-padding: 12px 20px;
-display: flex;
-align-items: center;
-gap: 12px;
-position: sticky;
-top: 0;
-z-index: 100;
-}
-#header .logo {
-font-family: ‘Black Han Sans’, sans-serif;
-font-size: 22px;
-color: var(–red);
-letter-spacing: 2px;
-text-shadow: 0 0 20px rgba(232,0,26,0.6);
-}
-#header .subtitle {
-font-size: 11px;
-color: var(–gray);
-letter-spacing: 3px;
-text-transform: uppercase;
-}
-#header .live-badge {
-margin-left: auto;
-background: var(–red);
-color: white;
-font-size: 10px;
-font-weight: 900;
-padding: 3px 8px;
-letter-spacing: 2px;
-animation: blink 1.2s step-end infinite;
-}
-@keyframes blink { 50% { opacity: 0; } }
-
-/* MAIN GAME AREA */
-#game-container {
-max-width: 860px;
-margin: 0 auto;
-padding: 24px 16px 80px;
+/* ── グリッドノイズ背景 ── */
+body::after {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
 }
 
-/* SCENE BOX */
-.scene-box {
-background: var(–dark);
-border: 1px solid #222;
-border-left: 4px solid var(–red);
-padding: 20px;
-margin-bottom: 20px;
-position: relative;
-animation: fadeIn 0.4s ease;
-}
-@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-
-/* CHARACTER PORTRAITS */
-.portrait-row {
-display: flex;
-gap: 16px;
-margin-bottom: 20px;
-align-items: flex-end;
-}
-.portrait {
-width: 72px;
-height: 72px;
-border-radius: 4px;
-border: 2px solid #333;
-flex-shrink: 0;
-display: flex;
-align-items: center;
-justify-content: center;
-font-size: 32px;
-background: #111;
-position: relative;
-overflow: hidden;
-}
-.portrait.speaking {
-border-color: var(–gold);
-box-shadow: 0 0 12px rgba(245,197,24,0.4);
-}
-.portrait.kazuya {
-background: linear-gradient(135deg, #1a0a00 0%, #2a1500 100%);
-}
-.portrait img {
-width: 100%;
-height: 100%;
-object-fit: cover;
-}
-.portrait-label {
-font-size: 11px;
-color: var(–gray);
-text-align: center;
-margin-top: 4px;
-letter-spacing: 1px;
-}
-.portrait-wrap { display: flex; flex-direction: column; }
-
-/* DIALOGUE */
-.dialogue-area {
-flex: 1;
-}
-.speaker-name {
-font-size: 13px;
-font-weight: 900;
-color: var(–gold);
-letter-spacing: 2px;
-margin-bottom: 6px;
-text-transform: uppercase;
-}
-.speaker-name.red { color: var(–red); }
-.speaker-name.white { color: var(–white); }
-.dialogue-text {
-font-size: 15px;
-line-height: 1.7;
-color: #ddd;
-min-height: 48px;
-}
-#typewriter-cursor {
-display: inline-block;
-width: 2px;
-height: 1em;
-background: var(–white);
-margin-left: 2px;
-animation: blink 0.6s step-end infinite;
-vertical-align: text-bottom;
+/* ==============================
+   HEADER
+============================== */
+header {
+  position: relative; z-index: 10;
+  padding: 60px 24px 48px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
 }
 
-/* CHOICES */
-#choices {
-display: flex;
-flex-direction: column;
-gap: 10px;
-margin-top: 16px;
-}
-.choice-btn {
-background: #111;
-border: 1px solid #333;
-border-left: 3px solid var(–red);
-color: var(–white);
-font-family: ‘Noto Sans JP’, sans-serif;
-font-size: 14px;
-padding: 14px 18px;
-cursor: pointer;
-text-align: left;
-transition: all 0.15s ease;
-position: relative;
-overflow: hidden;
-letter-spacing: 0.5px;
-}
-.choice-btn:hover {
-background: #1a0005;
-border-left-color: var(–gold);
-color: var(–gold);
-transform: translateX(4px);
-}
-.choice-btn:active { transform: translateX(2px); }
-.choice-btn .choice-num {
-color: var(–red);
-font-weight: 900;
-margin-right: 10px;
-font-size: 13px;
+.site-eyebrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 6px;
+  color: var(--glow-b);
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  animation: fadeUp 0.6s ease both;
 }
 
-/* STATS BAR */
-#stats-bar {
-display: flex;
-gap: 20px;
-background: var(–dark);
-border: 1px solid #222;
-padding: 12px 16px;
-margin-bottom: 20px;
-flex-wrap: wrap;
-}
-.stat-item {
-display: flex;
-flex-direction: column;
-gap: 4px;
-}
-.stat-label {
-font-size: 10px;
-color: var(–gray);
-letter-spacing: 2px;
-text-transform: uppercase;
-}
-.stat-bar-bg {
-width: 100px;
-height: 6px;
-background: #222;
-border-radius: 0;
-}
-.stat-bar-fill {
-height: 100%;
-background: var(–red);
-transition: width 0.4s ease;
-border-radius: 0;
-}
-.stat-bar-fill.gold { background: var(–gold); }
-.stat-bar-fill.blue { background: #00aaff; }
-.stat-value {
-font-size: 11px;
-color: var(–white);
-font-weight: 700;
+.site-title {
+  font-family: var(--display);
+  font-size: clamp(64px, 14vw, 130px);
+  line-height: 0.9;
+  letter-spacing: 4px;
+  /* ネオン分割カラー */
+  background: linear-gradient(
+    180deg,
+    #ffffff 0%,
+    #ffffff 45%,
+    var(--glow-r) 45%,
+    var(--glow-r) 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: none;
+  position: relative;
+  animation: fadeUp 0.7s 0.1s ease both;
 }
 
-/* SCENE LABEL */
-.scene-label {
-font-size: 10px;
-color: var(–red);
-letter-spacing: 3px;
-text-transform: uppercase;
-margin-bottom: 8px;
-font-weight: 700;
+/* タイトルのネオングロー（疑似要素で重ねる） */
+.site-title-wrap {
+  position: relative; display: inline-block;
+}
+.site-title-wrap::after {
+  content: 'GAME ARCADE';
+  position: absolute; inset: 0;
+  font-family: var(--display);
+  font-size: clamp(64px, 14vw, 130px);
+  line-height: 0.9;
+  letter-spacing: 4px;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(0,212,255,0.25);
+  filter: blur(12px);
+  pointer-events: none;
+  animation: titlePulse 4s ease-in-out infinite;
+}
+@keyframes titlePulse {
+  0%,100%{ filter:blur(12px); opacity:0.6; }
+  50%{ filter:blur(20px); opacity:1; }
 }
 
-/* NOTIFICATION */
-#notification {
-position: fixed;
-top: 70px;
-right: 16px;
-background: var(–red);
-color: white;
-padding: 10px 16px;
-font-size: 13px;
-font-weight: 700;
-letter-spacing: 1px;
-z-index: 200;
-transform: translateX(200%);
-transition: transform 0.3s ease;
-max-width: 260px;
-}
-#notification.show { transform: translateX(0); }
-#notification.good { background: #006600; }
-#notification.bad { background: var(–red); }
-
-/* CLEAR SCREEN */
-#clear-screen {
-display: none;
-position: fixed;
-inset: 0;
-background: #000;
-z-index: 1000;
-align-items: center;
-justify-content: center;
-flex-direction: column;
-text-align: center;
-}
-#clear-screen.show { display: flex; animation: clearIn 0.8s ease; }
-@keyframes clearIn { from { opacity: 0; } to { opacity: 1; } }
-.clear-title {
-font-family: ‘Black Han Sans’, sans-serif;
-font-size: 52px;
-color: var(–gold);
-text-shadow: 0 0 40px rgba(245,197,24,0.8), 0 0 80px rgba(245,197,24,0.4);
-margin-bottom: 16px;
-animation: pulseGlow 2s ease infinite;
-}
-@keyframes pulseGlow {
-0%, 100% { text-shadow: 0 0 40px rgba(245,197,24,0.8); }
-50% { text-shadow: 0 0 80px rgba(245,197,24,1), 0 0 120px rgba(245,197,24,0.6); }
-}
-.clear-quote {
-font-size: 28px;
-font-weight: 900;
-color: var(–red);
-margin-bottom: 8px;
-letter-spacing: 2px;
-}
-.clear-speaker {
-font-size: 14px;
-color: var(–gray);
-letter-spacing: 3px;
-margin-bottom: 40px;
-}
-#restart-btn {
-background: var(–red);
-color: white;
-border: none;
-padding: 14px 40px;
-font-family: ‘Noto Sans JP’, sans-serif;
-font-size: 16px;
-font-weight: 900;
-cursor: pointer;
-letter-spacing: 2px;
-transition: all 0.2s;
-}
-#restart-btn:hover { background: #ff001f; transform: scale(1.05); }
-
-/* GAMEOVER SCREEN */
-#gameover-screen {
-display: none;
-position: fixed;
-inset: 0;
-background: #000;
-z-index: 1000;
-align-items: center;
-justify-content: center;
-flex-direction: column;
-text-align: center;
-}
-#gameover-screen.show { display: flex; animation: clearIn 0.8s ease; }
-.gameover-title {
-font-family: ‘Black Han Sans’, sans-serif;
-font-size: 52px;
-color: var(–red);
-text-shadow: 0 0 40px rgba(232,0,26,0.8);
-margin-bottom: 16px;
-}
-.gameover-msg {
-font-size: 16px;
-color: var(–gray);
-margin-bottom: 40px;
-letter-spacing: 1px;
+.site-subtitle {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--muted);
+  letter-spacing: 3px;
+  margin-top: 16px;
+  animation: fadeUp 0.7s 0.2s ease both;
 }
 
-/* PARTICLE EFFECTS */
-.confetti-piece {
-position: fixed;
-width: 8px;
-height: 8px;
-animation: fall linear forwards;
-z-index: 999;
+/* コイン投入アニメ */
+.insert-coin {
+  margin-top: 28px;
+  font-family: var(--mono);
+  font-size: 14px;
+  color: var(--glow-y);
+  letter-spacing: 4px;
+  animation: coinBlink 1.4s step-end infinite, fadeUp 0.8s 0.4s ease both;
 }
-@keyframes fall {
-0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
-100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+@keyframes coinBlink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+/* ==============================
+   GAME COUNT BADGE
+============================== */
+.game-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 40px;
+  background: rgba(0,212,255,0.06);
+  border: 1px solid rgba(0,212,255,0.2);
+  padding: 8px 20px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--glow-b);
+  letter-spacing: 3px;
+  animation: fadeUp 0.8s 0.3s ease both;
+}
+.game-count span { color: var(--text); font-size: 16px; font-weight: 900; }
+
+/* ==============================
+   GAME GRID
+============================== */
+.games-section {
+  position: relative; z-index: 10;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 64px 24px 80px;
 }
 
-/* NEXT BUTTON */
-#next-btn {
-display: none;
-background: transparent;
-border: 1px solid #333;
-border-bottom: 2px solid var(–red);
-color: var(–gray);
-font-family: ‘Noto Sans JP’, sans-serif;
-font-size: 12px;
-padding: 8px 20px;
-cursor: pointer;
-letter-spacing: 2px;
-margin-top: 12px;
-transition: all 0.2s;
+.section-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 5px;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 32px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
-#next-btn:hover { color: var(–white); border-color: var(–red); }
-
-/* KAZUYA IMAGE */
-.kazuya-img {
-width: 100%;
-height: 100%;
-object-fit: cover;
-object-position: top center;
-filter: contrast(1.1) saturate(0.8);
+.section-label::before, .section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border));
+}
+.section-label::before {
+  background: linear-gradient(90deg, var(--border), transparent);
 }
 
-/* PROGRESS */
-#progress-bar {
-height: 3px;
-background: #111;
-margin-bottom: 20px;
-position: relative;
+.games-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2px;
 }
-#progress-fill {
-height: 100%;
-background: linear-gradient(90deg, var(–red), var(–gold));
-transition: width 0.5s ease;
-}
-</style>
 
+/* ── ゲームカード ── */
+.game-card {
+  position: relative;
+  display: block;
+  text-decoration: none;
+  background: var(--panel);
+  overflow: hidden;
+  transition: transform 0.25s ease;
+  animation: fadeUp 0.6s ease both;
+  border: 1px solid var(--border);
+}
+.game-card:nth-child(1){ animation-delay: 0.15s; }
+.game-card:nth-child(2){ animation-delay: 0.25s; }
+.game-card:nth-child(3){ animation-delay: 0.35s; }
+
+.game-card:hover {
+  transform: translateY(-4px);
+  z-index: 2;
+}
+
+/* カード上部：アートエリア */
+.card-art {
+  position: relative;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* ゲームごとの背景カラー */
+.card-art.bd {
+  background: radial-gradient(ellipse at 50% 60%, #2a0a0a 0%, #0d0005 100%);
+}
+.card-art.futon {
+  background: radial-gradient(ellipse at 50% 60%, #0e0a2a 0%, #050010 100%);
+}
+.card-art.nameko {
+  background: radial-gradient(ellipse at 50% 60%, #051a2a 0%, #010a0d 100%);
+}
+
+/* アートエリアの内側グリッドライン装飾 */
+.card-art::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* アートエリアのアクセントライン（左辺） */
+.card-art::after {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+}
+.card-art.bd::after   { background: var(--glow-r); box-shadow: 0 0 16px var(--glow-r); }
+.card-art.futon::after { background: #c084fc; box-shadow: 0 0 16px #c084fc; }
+.card-art.nameko::after { background: var(--glow-b); box-shadow: 0 0 16px var(--glow-b); }
+
+/* ゲームの大きな絵文字アイコン */
+.card-icon {
+  font-size: 72px;
+  filter: drop-shadow(0 0 24px rgba(255,255,255,0.2));
+  animation: iconFloat 3s ease-in-out infinite;
+  position: relative; z-index: 1;
+}
+.game-card:nth-child(2) .card-icon { animation-delay: -1s; }
+.game-card:nth-child(3) .card-icon { animation-delay: -2s; }
+@keyframes iconFloat {
+  0%,100%{ transform:translateY(0) scale(1); }
+  50%{ transform:translateY(-8px) scale(1.04); }
+}
+
+/* ホバー時のスキャンライン sweep */
+.card-sweep {
+  position: absolute; inset: 0;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(255,255,255,0.04) 50%,
+    transparent 100%
+  );
+  transform: translateY(-100%);
+  transition: transform 0s;
+  pointer-events: none;
+}
+.game-card:hover .card-sweep {
+  transform: translateY(100%);
+  transition: transform 0.5s ease;
+}
+
+/* 「PLAY」オーバーレイ */
+.card-play-overlay {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0);
+  transition: background 0.2s ease;
+}
+.game-card:hover .card-play-overlay {
+  background: rgba(0,0,0,0.35);
+}
+.play-label {
+  font-family: var(--display);
+  font-size: 42px;
+  letter-spacing: 6px;
+  color: #fff;
+  opacity: 0;
+  transform: scale(0.85);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.game-card:hover .play-label {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* カード下部：テキストエリア */
+.card-body {
+  padding: 20px 22px 22px;
+  border-top: 1px solid var(--border);
+}
+
+.card-genre {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.bd   .card-genre { color: var(--glow-r); }
+.futon .card-genre { color: #c084fc; }
+.nameko .card-genre { color: var(--glow-b); }
+
+/* カード名をボディ側でも参照できるようクラスを付ける */
+.card-body.bd .card-genre   { color: var(--glow-r); }
+.card-body.futon .card-genre { color: #c084fc; }
+.card-body.nameko .card-genre { color: var(--glow-b); }
+
+.card-title {
+  font-family: var(--display);
+  font-size: 28px;
+  letter-spacing: 2px;
+  color: var(--text);
+  line-height: 1.1;
+  margin-bottom: 8px;
+}
+
+.card-desc {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.7;
+  letter-spacing: 0.5px;
+}
+
+/* カード下のCTA行 */
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.card-tag {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 2px;
+  padding: 3px 8px;
+  border: 1px solid;
+}
+.bd   .card-tag { border-color: var(--glow-r); color: var(--glow-r); }
+.futon .card-tag { border-color: #c084fc; color: #c084fc; }
+.nameko .card-tag { border-color: var(--glow-b); color: var(--glow-b); }
+
+.card-arrow {
+  font-size: 18px;
+  transition: transform 0.2s ease;
+}
+.game-card:hover .card-arrow { transform: translateX(6px); }
+
+/* ホバー時のグロー縁 */
+.game-card::before {
+  content: '';
+  position: absolute; inset: 0;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.game-card.bd::before   { box-shadow: inset 0 0 40px rgba(255,45,85,0.12); opacity: 0; }
+.game-card.futon::before { box-shadow: inset 0 0 40px rgba(192,132,252,0.12); opacity: 0; }
+.game-card.nameko::before { box-shadow: inset 0 0 40px rgba(0,212,255,0.12); opacity: 0; }
+.game-card:hover::before { opacity: 1; }
+
+/* ==============================
+   FOOTER
+============================== */
+footer {
+  position: relative; z-index: 10;
+  border-top: 1px solid var(--border);
+  padding: 32px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.footer-logo {
+  font-family: var(--display);
+  font-size: 22px;
+  letter-spacing: 3px;
+  color: var(--muted);
+}
+
+.footer-copy {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 2px;
+}
+
+/* ==============================
+   SHARED ANIMATION
+============================== */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ==============================
+   RESPONSIVE
+============================== */
+@media (max-width: 640px) {
+  header { padding: 40px 16px 36px; }
+  .games-section { padding: 40px 0 60px; }
+  .game-card { border-left: none; border-right: none; }
+  .games-grid { gap: 1px; }
+}
+```
+
+  </style>
 </head>
 <body>
 
-<div id="header">
-  <div>
-    <div class="logo">⚡ BREAKING DOWN</div>
-    <div class="subtitle">Official Audition System</div>
-  </div>
-  <div class="live-badge">● LIVE</div>
-</div>
+  <!-- ヘッダー -->
 
-<div id="game-container">
-  <div id="progress-bar"><div id="progress-fill" style="width:0%"></div></div>
-
-  <div id="stats-bar">
-    <div class="stat-item">
-      <div class="stat-label">度胸</div>
-      <div class="stat-bar-bg"><div class="stat-bar-fill" id="bar-guts" style="width:40%"></div></div>
-      <div class="stat-value" id="val-guts">40</div>
+  <header>
+    <div class="site-eyebrow">✦ WELCOME TO ✦</div>
+    <div class="site-title-wrap">
+      <h1 class="site-title">GAME ARCADE</h1>
     </div>
-    <div class="stat-item">
-      <div class="stat-label">キャラ</div>
-      <div class="stat-bar-bg"><div class="stat-bar-fill gold" id="bar-chara" style="width:30%"></div></div>
-      <div class="stat-value" id="val-chara">30</div>
+    <p class="site-subtitle">— BROWSER GAMES COLLECTION —</p>
+    <p class="insert-coin">▶ INSERT COIN TO PLAY ◀</p>
+    <div class="game-count">
+      TOTAL GAMES &nbsp;/&nbsp; <span>03</span>
     </div>
-    <div class="stat-item">
-      <div class="stat-label">印象</div>
-      <div class="stat-bar-bg"><div class="stat-bar-fill blue" id="bar-imp" style="width:20%"></div></div>
-      <div class="stat-value" id="val-imp">20</div>
-    </div>
-    <div class="stat-item" style="margin-left:auto">
-      <div class="stat-label">ステージ</div>
-      <div class="stat-value" id="stage-label" style="font-size:14px;color:var(--gold)">第１関門</div>
-    </div>
-  </div>
+  </header>
 
-  <div id="scene-container"></div>
-  <div id="choices"></div>
-  <button id="next-btn" onclick="nextScene()">▶ 続ける</button>
-</div>
+  <!-- ゲーム一覧 -->
 
-<div id="notification"></div>
+  <main class="games-section">
+    <div class="section-label">SELECT YOUR GAME</div>
 
-<div id="clear-screen">
-  <div style="font-size:14px;color:var(--gray);letter-spacing:4px;margin-bottom:20px">— 朝倉未来 —</div>
-  <div class="clear-quote">「そこ試合決定で。」</div>
-  <div style="height:2px;width:200px;background:var(--gold);margin:20px auto"></div>
-  <div class="clear-title">🏆 AUDITION PASS</div>
-  <div style="color:var(--white);font-size:18px;font-weight:700;margin-bottom:8px">面接突破おめでとう！</div>
-  <div style="color:var(--gray);font-size:14px;margin-bottom:40px">あなたはBreakingDown本戦への出場権を獲得した</div>
-  <button id="restart-btn" onclick="restartGame()">もう一度やる</button>
-</div>
+```
+<div class="games-grid">
 
-<div id="gameover-screen">
-  <div class="gameover-title">💀 REJECTED</div>
-  <div id="gameover-reason" class="gameover-msg">残念。また出直してこい。</div>
-  <button id="restart-btn" onclick="restartGame()" style="background:#333">もう一度やる</button>
-</div>
-
-<script>
-// ===== GAME STATE =====
-let state = {
-  guts: 40,
-  chara: 30,
-  imp: 20,
-  scene: 0,
-  typing: false,
-  pendingNext: null
-};
-
-// ===== SCENES DATA =====
-// speaker: 'kazuya'|'mirai'|'mizo'|'you'|'narrator'
-const SCENES = [
-  // ===== INTRO =====
-  {
-    id: 'intro',
-    type: 'narration',
-    text: '——あなたはいま、BreakingDownのオーディション会場へ向かっている。\n\n会場は都内某所のスタジオ。\n朝倉未来が審査員として座るそのひな壇に選ばれるため、今日ここにやってきた。\n\n扉の前に、見覚えのある男が立っていた——',
-    next: 'kazuya_intro'
-  },
-  {
-    id: 'kazuya_intro',
-    type: 'dialogue',
-    speaker: 'kazuya',
-    speakerName: '瓜田カズヤ',
-    speakerColor: 'red',
-    portrait: 'kazuya_img',
-    text: 'おい。お前も面接か？\nまあ見た感じ、オーラあんじゃねーか。\n俺は瓜田カズヤ。ここでたむろしてる。\nお前、ちゃんとやれよ。',
-    next: 'kazuya_choice1'
-  },
-  {
-    id: 'kazuya_choice1',
-    type: 'choice',
-    speaker: 'you',
-    speakerName: 'あなた。',
-    speakerColor: 'white',
-    portrait: 'you_icon',
-    question: '「……」',
-    choices: [
-      { text: '「あんた誰ですか？」とシラを切る', delta: {guts:+5, chara:+8, imp:+3}, result: 'kazuya_c1a', notify: '😂 カズヤ、思わず笑った', notifyType: 'good' },
-      { text: '「瓜田さん！俺ずっとファンです！」と飛びつく', delta: {guts:-5, chara:+5, imp:+10}, result: 'kazuya_c1b', notify: '👍 印象アップ！', notifyType: 'good' },
-      { text: '「よろしくっす」と素っ気なく返す', delta: {guts:+10, chara:+5, imp:-5}, result: 'kazuya_c1c', notify: '💪 度胸アップ！', notifyType: 'good' },
-    ]
-  },
-  {
-    id: 'kazuya_c1a',
-    type: 'dialogue', speaker: 'kazuya', speakerName: '瓜田カズヤ', speakerColor: 'red', portrait: 'kazuya_img',
-    text: 'はははっ！いいじゃねーか、そのふてぶてしさ。\n面接官に気に入られる前に俺には気に入られたぞ。\nじゃあ行ってこい。',
-    next: 'room_enter'
-  },
-  {
-    id: 'kazuya_c1b',
-    type: 'dialogue', speaker: 'kazuya', speakerName: '瓜田カズヤ', speakerColor: 'red', portrait: 'kazuya_img',
-    text: '「うるせー調子乗んな」\n……まあ悪い気はしねーけどな。\n中で全力でやってこい。',
-    next: 'room_enter'
-  },
-  {
-    id: 'kazuya_c1c',
-    type: 'dialogue', speaker: 'kazuya', speakerName: '瓜田カズヤ', speakerColor: 'red', portrait: 'kazuya_img',
-    text: 'ふっ……肝据わってんじゃねーか。\nそのメンタルで中行ってこい。',
-    next: 'room_enter'
-  },
-
-  // ===== ROOM ENTER =====
-  {
-    id: 'room_enter',
-    type: 'narration',
-    stageLabel: '第２関門',
-    stageProgress: 25,
-    text: '——扉を開けると、ひな壇には数名の審査員。\n中央に、あの男が腕を組んで座っていた。\n\n朝倉未来——。\n\n室内に緊張感が走る。',
-    next: 'mirai_first'
-  },
-  {
-    id: 'mirai_first',
-    type: 'dialogue', speaker: 'mirai', speakerName: '朝倉未来', speakerColor: 'gold', portrait: 'mirai_icon',
-    text: 'はいはい。まあ座れよ。\n……で、お前、なんでBreakingDown出たいの？',
-    next: 'mirai_q1'
-  },
-  {
-    id: 'mirai_q1',
-    type: 'choice',
-    speaker: 'you', speakerName: 'あなた。', speakerColor: 'white', portrait: 'you_icon',
-    question: '朝倉未来の最初の質問。どう答える？',
-    choices: [
-      { text: '「俺が一番強いことを証明したい」', delta: {guts:+10, chara:+8, imp:+5}, result: 'mirai_q1a', notify: '🔥 朝倉の目が光った', notifyType: 'good' },
-      { text: '「バズりたいんです、正直」', delta: {guts:+5, chara:+15, imp:+8}, result: 'mirai_q1b', notify: '😆 正直さで笑わせた！', notifyType: 'good' },
-      { text: '「憧れの朝倉さんに会いたくて……」', delta: {guts:-10, chara:-5, imp:+5}, result: 'mirai_q1c', notify: '😑 微妙な空気…', notifyType: 'bad' },
-      { text: '「喧嘩なら誰にも負けたことない」', delta: {guts:+15, chara:+10, imp:+3}, result: 'mirai_q1d', notify: '💥 度胸大幅アップ！', notifyType: 'good' },
-    ]
-  },
-  {
-    id: 'mirai_q1a',
-    type: 'dialogue', speaker: 'mirai', speakerName: '朝倉未来', speakerColor: 'gold', portrait: 'mirai_icon',
-    text: 'へえ。その根拠は？\n口だけの奴はもう見飽きてるんだよね、俺。',
-    next: 'mirai_q2'
-  },
-  {
-    id: 'mirai_q1b',
-    type: 'dialogue', speaker: 'mirai', speakerName: '朝倉未来', speakerColor: 'gold', portrait: 'mirai_icon',
-    text: 'はははっ！正直でいいじゃん。\nまあバズるにはそれなりに面白くないとな。',
-    next: 'mirai_q2'
-  },
-  {
-    id: 'mirai_q1c',
-    type: 'dialogue', speaker: 'mirai', speakerName: '朝倉未来', speakerColor: 'gold', portrait: 'mirai_icon',
-    text: '……うーん。それだけじゃちょっとな。\nもうちょっと熱いもんないの、お前に？',
-    next: 'mirai_q2'
-  },
-  {
-    id: 'mirai_q1d',
-    type: 'dialogue', speaker: 'mirai', speakerName: '朝倉未来', speakerColor: 'gold', portrait: 'mirai_icon',
-    text: '喧嘩自慢か。まあBreakingDownらしいな。\nじゃあもう少し聞かせろ。',
-    next: 'mirai_q2'
-  },
-
-  // ===== QUESTION 2 =====
-  {
-    id: 'mirai_q2',
-    type: 'choice',
-    speaker: 'you', speakerName: 'あなた。', speakerColor: 'white', portrait: 'you_icon',
-    stageLabel: '第３関門',
-    stageProgress: 50,
-    question: '朝倉「お前の武器ってなに？強み教えてよ」',
-    choices: [
-      { text: '「打たれ強さだけは誰にも負けない」', delta: {guts:+15, chara:+5, imp:+5}, result: 'mizo_enters', notify: '💪 ガッツ大幅アップ！', notifyType: 'good' },
-      { text: '上半身の服を脱いで体を見せつける', delta: {guts:+20, chara:+20, imp:+15}, result: 'mizo_enters', notify: '🔥 会場が沸いた！全ステータス大幅UP', notifyType: 'good' },
-      { text: '「特にないっす。でも絶対勝ちます」', delta: {guts:+5, chara:+10, imp:+3}, result: 'mizo_enters', notify: '😏 謎の自信に笑いが起きた', notifyType: 'good' },
-      { text: '「弱点はあります。でも欠点が魅力だと思ってます」', delta: {guts:+3, chara:+15, imp:+12}, result: 'mizo_enters', notify: '👏 哲学的回答！キャラアップ', notifyType: 'good' },
-    ]
-  },
-
-  // ===== MIZO INTERRUPTS =====
-  {
-    id: 'mizo_enters',
-    type: 'dialogue', speaker: 'mizo', speakerName: '溝口勇児 (COO)', speakerColor: 'gray', portrait: 'mizo_icon',
-    text: 'ちょっと待って。\nお前さ、SNSとかやってんの？\n数字持ってる奴の方が運営としてはありがたいんだよね。',
-    next: 'mizo_q'
-  },
-  {
-    id: 'mizo_q',
-    type: 'choice',
-    speaker: 'you', speakerName: 'あなた。', speakerColor: 'white', portrait: 'you_icon',
-    question: '溝口COOの「SNSやってるの？」という質問。',
-    choices: [
-      { text: '「フォロワー3万います」（嘘）', delta: {guts:+5, chara:+5, imp:+10}, result: 'mizo_lie', notify: '😅 嘘かどうかバレるかも…', notifyType: 'bad' },
-      { text: '「数字より中身で勝負したい」と強がる', delta: {guts:+15, chara:+10, imp:-5}, result: 'mizo_strong', notify: '💥 朝倉が興味深そうな顔をした', notifyType: 'good' },
-      { text: '「今から始めます。俺が出れば勝手にバズる」', delta: {guts:+10, chara:+20, imp:+15}, result: 'mizo_hype', notify: '🔥 会場がウケた！キャラ大幅UP', notifyType: 'good' },
-    ]
-  },
-  {
-    id: 'mizo_lie',
-    type: 'dialogue', speaker: 'mizo', speakerName: '溝口勇児 (COO)', speakerColor: 'gray', portrait: 'mizo_icon',
-    text: 'へえ、見せてみろよ。\n（スマホをチェックしている）\n……まあいいや。続けよう。',
-    next: 'spar_challenge'
-  },
-  {
-    id: 'mizo_strong',
-    type: 'dialogue', speaker: 'mizo', speakerName: '溝口勇児 (COO)', speakerColor: 'gray', portrait: 'mizo_icon',
-    text: 'なるほどな……。\n（朝倉を見る）\nまあ中身見てからだな。',
-    next: 'spar_challenge'
-  },
-  {
-    id: 'mizo_hype',
-    type: 'dialogue', speaker: 'mirai', speakerName: '朝倉未来', speakerColor: 'gold', portrait: 'mirai_icon',
-    text: 'はははっ！気が早えな。\nそのくらいの自信がないとここには来れないけどな。\nじゃあ最後の試練だ。',
-    next: 'spar_challenge'
-  },
-
-  // ===== SPARRING =====
-  {
-    id: 'spar_challenge',
-    type: 'narration',
-    stageLabel: '最終関門',
-    stageProgress: 75,
-    text: '——緊張の空気が漂う中、ひな壇の一人が前に出てきた。\n\n「スパーリングやってみろ」\n\n目の前に立つのは前回大会の出場者。\nここが正念場だ——',
-    next: 'spar_choice'
-  },
-  {
-    id: 'spar_choice',
-    type: 'choice',
-    speaker: 'you', speakerName: 'あなた。', speakerColor: 'white', portrait: 'you_icon',
-    question: 'スパーリング！どう動く？',
-    choices: [
-      { text: '開始直後に全力で突っ込んで倒す', delta: {guts:+20, chara:+15, imp:+10}, result: 'spar_win', notify: '💥 会場がざわついた！', notifyType: 'good' },
-      { text: 'あえて打たれてから逆転する熱い展開を演出', delta: {guts:+10, chara:+25, imp:+20}, result: 'spar_drama', notify: '🎭 最高のドラマが生まれた！', notifyType: 'good' },
-      { text: '挑発しながら相手のペースを崩す', delta: {guts:+15, chara:+20, imp:+8}, result: 'spar_talk', notify: '🎤 キャラが立った！', notifyType: 'good' },
-    ]
-  },
-  {
-    id: 'spar_win',
-    type: 'dialogue', speaker: 'mirai', speakerName: '朝倉未来', speakerColor: 'gold', portrait: 'mirai_icon',
-    text: '……おお。\nやるじゃん。\nちゃんと動けるじゃん、お前。',
-    next: 'final_check'
-  },
-  {
-    id: 'spar_drama',
-    type: 'dialogue', speaker: 'mirai', speakerName: '朝倉未来', speakerColor: 'gold', portrait: 'mirai_icon',
-    text: 'うわ、これはアツい！\n打たれてから逆転って……\nBreakingDownぽいな、めちゃくちゃ。',
-    next: 'final_check'
-  },
-  {
-    id: 'spar_talk',
-    type: 'dialogue', speaker: 'mirai', speakerName: '朝倉未来', speakerColor: 'gold', portrait: 'mirai_icon',
-    text: '煽りながら戦うじゃん。\nキャラ立ってるな。ひな壇向きかもな。',
-    next: 'final_check'
-  },
-
-  // ===== FINAL CHECK =====
-  {
-    id: 'final_check',
-    type: 'narration',
-    stageProgress: 90,
-    text: '——スパーリングが終わり、審査員たちが顔を見合わせている。\n\n朝倉未来が立ち上がった。\n\n全員が静まり返る。\n\nこの瞬間が——全てを決める。',
-    next: 'mirai_last_question'
-  },
-  {
-    id: 'mirai_last_question',
-    type: 'dialogue', speaker: 'mirai', speakerName: '朝倉未来', speakerColor: 'gold', portrait: 'mirai_icon',
-    text: '最後に一個だけ聞く。\n\nお前、負けたらどうする？',
-    next: 'final_choice'
-  },
-  {
-    id: 'final_choice',
-    type: 'choice',
-    speaker: 'you', speakerName: 'あなた。', speakerColor: 'white', portrait: 'you_icon',
-    question: '朝倉未来の最後の問い。「負けたらどうする？」',
-    choices: [
-      { text: '「負けません」とだけ言う', delta: {guts:+15, chara:+5, imp:+5}, result: 'ending_check', notify: '💪 シンプルで力強い！', notifyType: 'good' },
-      { text: '「負けたら土下座して再挑戦をお願いします」', delta: {guts:+5, chara:+20, imp:+15}, result: 'ending_check', notify: '😂 会場が沸いた！', notifyType: 'good' },
-      { text: '「負けたときのことは考えたことがない」', delta: {guts:+20, chara:+15, imp:+10}, result: 'ending_check', notify: '🔥 最高の答え！', notifyType: 'good' },
-    ]
-  }
-];
-
-// Special ending check scene
-const ENDING_PASS = {
-  id: 'ending_pass',
-  type: 'dialogue', speaker: 'mirai', speakerName: '朝倉未来', speakerColor: 'gold', portrait: 'mirai_icon',
-  text: 'ふっ……\n\n（審査員たちがうなずく）\n\n——そこ試合決定で。',
-  next: 'CLEAR'
-};
-
-const ENDING_FAIL = {
-  id: 'ending_fail',
-  type: 'dialogue', speaker: 'mirai', speakerName: '朝倉未来', speakerColor: 'gold', portrait: 'mirai_icon',
-  text: 'うーん……\nキャラも度胸も印象も、もう一歩足りないな。\nまた出直してこい。',
-  next: 'GAMEOVER'
-};
-
-// ===== SCENE LOOKUP =====
-const sceneMap = {};
-SCENES.forEach(s => sceneMap[s.id] = s);
-sceneMap['ending_pass'] = ENDING_PASS;
-sceneMap['ending_fail'] = ENDING_FAIL;
-
-// ===== RENDERING =====
-function getPortrait(id) {
-  if (id === 'kazuya_img') {
-    return `<img class="kazuya-img" src="/mnt/user-data/uploads/B759735A-61DE-4494-9697-5E45FCE68C78.png" alt="瓜田カズヤ">`;
-  }
-  const emojis = { mirai_icon: '👊', mizo_icon: '📋', you_icon: '😤', narrator: '📖' };
-  return `<span>${emojis[id] || '❓'}</span>`;
-}
-
-function renderScene(sceneId) {
-  // Handle special endings
-  if (sceneId === 'ending_check') {
-    const total = state.guts + state.chara + state.imp;
-    sceneId = total >= 300 ? 'ending_pass' : 'ending_fail';
-  }
-
-  const scene = sceneMap[sceneId];
-  if (!scene) return;
-
-  // Update stage label & progress
-  if (scene.stageLabel) document.getElementById('stage-label').textContent = scene.stageLabel;
-  if (scene.stageProgress !== undefined) document.getElementById('progress-fill').style.width = scene.stageProgress + '%';
-
-  const container = document.getElementById('scene-container');
-  container.innerHTML = '';
-  document.getElementById('choices').innerHTML = '';
-  document.getElementById('next-btn').style.display = 'none';
-
-  if (scene.type === 'narration') {
-    const box = document.createElement('div');
-    box.className = 'scene-box';
-    box.innerHTML = `
-      <div class="scene-label">NARRATION</div>
-      <div class="dialogue-text" id="typewriter-text"></div><span id="typewriter-cursor"></span>
-    `;
-    container.appendChild(box);
-    typeText(scene.text, 'typewriter-text', () => {
-      document.getElementById('next-btn').style.display = 'inline-block';
-      document.getElementById('next-btn').onclick = () => renderScene(scene.next);
-    });
-  } else if (scene.type === 'dialogue') {
-    const box = document.createElement('div');
-    box.className = 'scene-box';
-    box.innerHTML = `
-      <div class="portrait-row">
-        <div class="portrait-wrap">
-          <div class="portrait speaking">${getPortrait(scene.portrait)}</div>
-          <div class="portrait-label">${scene.speakerName}</div>
-        </div>
-        <div class="dialogue-area">
-          <div class="speaker-name ${scene.speakerColor}">${scene.speakerName}</div>
-          <div class="dialogue-text" id="typewriter-text"></div><span id="typewriter-cursor"></span>
-        </div>
+  <!-- ① BreakingDown 面接ゲーム -->
+  <a class="game-card bd" href="breakingdown_interview.html">
+    <div class="card-art bd">
+      <div class="card-sweep"></div>
+      <div class="card-icon">⚡</div>
+      <div class="card-play-overlay">
+        <div class="play-label">PLAY</div>
       </div>
-    `;
-    container.appendChild(box);
-    typeText(scene.text, 'typewriter-text', () => {
-      if (scene.next === 'CLEAR') {
-        setTimeout(() => showClear(), 500);
-      } else if (scene.next === 'GAMEOVER') {
-        setTimeout(() => showGameOver(), 500);
-      } else {
-        document.getElementById('next-btn').style.display = 'inline-block';
-        document.getElementById('next-btn').onclick = () => renderScene(scene.next);
-      }
-    });
-  } else if (scene.type === 'choice') {
-    const box = document.createElement('div');
-    box.className = 'scene-box';
-    box.innerHTML = `
-      <div class="portrait-row">
-        <div class="portrait-wrap">
-          <div class="portrait speaking">${getPortrait(scene.portrait)}</div>
-          <div class="portrait-label">${scene.speakerName}</div>
-        </div>
-        <div class="dialogue-area">
-          <div class="speaker-name ${scene.speakerColor}">選択</div>
-          <div class="dialogue-text">${scene.question}</div>
-        </div>
+    </div>
+    <div class="card-body">
+      <div class="card-genre bd">Visual Novel / Interview</div>
+      <h2 class="card-title">BREAKING DOWN<br>面接ゲーム</h2>
+      <p class="card-desc">朝倉未来に認められろ。選択肢で度胸・キャラ・印象を上げ、BreakingDown本戦の出場権を勝ち取れ。</p>
+      <div class="card-footer">
+        <span class="card-tag bd">INTERVIEW SIM</span>
+        <span class="card-arrow">→</span>
       </div>
-    `;
-    container.appendChild(box);
+    </div>
+  </a>
 
-    const choicesDiv = document.getElementById('choices');
-    scene.choices.forEach((c, i) => {
-      const btn = document.createElement('button');
-      btn.className = 'choice-btn';
-      btn.innerHTML = `<span class="choice-num">${i+1}.</span>${c.text}`;
-      btn.onclick = () => selectChoice(c);
-      choicesDiv.appendChild(btn);
+  <!-- ② 布団ちゃん配信シミュレーター -->
+  <a class="game-card futon" href="futon_game.html">
+    <div class="card-art futon">
+      <div class="card-sweep"></div>
+      <div class="card-icon">🛌</div>
+      <div class="card-play-overlay">
+        <div class="play-label">PLAY</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="card-genre futon">Simulation / Streaming</div>
+      <h2 class="card-title">布団ちゃん<br>配信SIM</h2>
+      <p class="card-desc">コメントが飛び交うリアルタイム雑談配信。同接10万人を目指せ。炎上・寝落ち・スパチャ待ってるぞ。</p>
+      <div class="card-footer">
+        <span class="card-tag futon">STREAM SIM</span>
+        <span class="card-arrow">→</span>
+      </div>
+    </div>
+  </a>
+
+  <!-- ③ なめこシューティング -->
+  <a class="game-card nameko" href="nameko_shooter.html">
+    <div class="card-art nameko">
+      <div class="card-sweep"></div>
+      <div class="card-icon">🍄</div>
+      <div class="card-play-overlay">
+        <div class="play-label">PLAY</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="card-genre nameko">Shooting / Action</div>
+      <h2 class="card-title">なめこ<br>シューティング</h2>
+      <p class="card-desc">ジャンボジェットで空を飛び、降り注ぐなめこを撃ち落とせ。スマホにも対応。何匹倒せるか？</p>
+      <div class="card-footer">
+        <span class="card-tag nameko">2D SHOOTER</span>
+        <span class="card-arrow">→</span>
+      </div>
+    </div>
+  </a>
+
+</div>
+```
+
+  </main>
+
+  <!-- フッター -->
+
+  <footer>
+    <div class="footer-logo">GAME ARCADE</div>
+    <div class="footer-copy">© 2025 &nbsp;·&nbsp; ALL GAMES PLAYABLE IN BROWSER</div>
+  </footer>
+
+  <script>
+    // カードにホバーした瞬間、アクセントカラーに応じたグロー border を動的に付加
+    document.querySelectorAll('.game-card').forEach(card => {
+      const colors = { bd: '#ff2d55', futon: '#c084fc', nameko: '#00d4ff' };
+      const key = [...card.classList].find(c => colors[c]);
+      if (!key) return;
+      card.addEventListener('mouseenter', () => {
+        card.style.borderColor = colors[key];
+        card.style.boxShadow   = `0 0 32px ${colors[key]}22, 0 20px 60px rgba(0,0,0,0.6)`;
+      });
+      card.addEventListener('mouseleave', () => {
+        card.style.borderColor = '';
+        card.style.boxShadow   = '';
+      });
     });
-  }
-}
 
-function selectChoice(choice) {
-  // Apply delta
-  if (choice.delta) {
-    state.guts = Math.min(100, Math.max(0, state.guts + (choice.delta.guts || 0)));
-    state.chara = Math.min(100, Math.max(0, state.chara + (choice.delta.chara || 0)));
-    state.imp = Math.min(100, Math.max(0, state.imp + (choice.delta.imp || 0)));
-    updateStats();
-  }
-  // Show notification
-  if (choice.notify) showNotification(choice.notify, choice.notifyType);
-  // Go to result scene
-  renderScene(choice.result);
-}
+    // パーティクル：背景のランダム光点
+    const canvas = document.createElement('canvas');
+    canvas.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:1;opacity:0.4';
+    document.body.prepend(canvas);
+    const c = canvas.getContext('2d');
+    const dots = Array.from({length: 60}, () => ({
+      x: Math.random(), y: Math.random(),
+      r: Math.random() * 1.5 + 0.3,
+      s: (Math.random() - 0.5) * 0.0002,
+      a: Math.random()
+    }));
+    function resize() { canvas.width = innerWidth; canvas.height = innerHeight; }
+    resize(); window.addEventListener('resize', resize);
 
-function updateStats() {
-  document.getElementById('bar-guts').style.width = state.guts + '%';
-  document.getElementById('bar-chara').style.width = state.chara + '%';
-  document.getElementById('bar-imp').style.width = state.imp + '%';
-  document.getElementById('val-guts').textContent = state.guts;
-  document.getElementById('val-chara').textContent = state.chara;
-  document.getElementById('val-imp').textContent = state.imp;
-}
-
-function showNotification(msg, type) {
-  const el = document.getElementById('notification');
-  el.textContent = msg;
-  el.className = 'show ' + (type || '');
-  setTimeout(() => el.className = '', 2500);
-}
-
-let typeInterval = null;
-function typeText(text, targetId, callback) {
-  const el = document.getElementById(targetId);
-  if (!el) return;
-  const lines = text.split('\n');
-  let html = '';
-  let charIndex = 0;
-  const allChars = text.split('');
-
-  if (typeInterval) clearInterval(typeInterval);
-
-  el.innerHTML = '';
-  let current = '';
-
-  typeInterval = setInterval(() => {
-    if (charIndex >= allChars.length) {
-      clearInterval(typeInterval);
-      const cursor = document.getElementById('typewriter-cursor');
-      if (cursor) cursor.style.display = 'none';
-      if (callback) callback();
-      return;
-    }
-    const ch = allChars[charIndex];
-    if (ch === '\n') current += '<br>';
-    else current += ch;
-    el.innerHTML = current;
-    charIndex++;
-  }, 30);
-}
-
-// Click to skip typewriter
-document.getElementById('scene-container').addEventListener('click', () => {
-  if (typeInterval) {
-    clearInterval(typeInterval);
-    // Force complete
-    const el = document.getElementById('typewriter-text');
-    if (el) {
-      const currentScene = getCurrentNarrScene();
-      // Just trigger done
-    }
-  }
-});
-
-function showClear() {
-  document.getElementById('progress-fill').style.width = '100%';
-  document.getElementById('clear-screen').classList.add('show');
-  spawnConfetti();
-}
-
-function showGameOver() {
-  const total = state.guts + state.chara + state.imp;
-  let reason = '印象が足りなかった。もっと自分を出せ。';
-  if (state.guts < 50) reason = '度胸が足りない。もっとガツガツこい。';
-  else if (state.chara < 50) reason = 'キャラが薄い。個性を出せ。';
-  document.getElementById('gameover-reason').textContent = reason;
-  document.getElementById('gameover-screen').classList.add('show');
-}
-
-function spawnConfetti() {
-  const colors = ['#e8001a', '#f5c518', '#ffffff', '#ff6600'];
-  for (let i = 0; i < 60; i++) {
-    setTimeout(() => {
-      const piece = document.createElement('div');
-      piece.className = 'confetti-piece';
-      piece.style.cssText = `
-        left: ${Math.random()*100}vw;
-        top: -10px;
-        background: ${colors[Math.floor(Math.random()*colors.length)]};
-        animation-duration: ${1.5+Math.random()*2}s;
-        animation-delay: ${Math.random()*1}s;
-        width: ${6+Math.random()*8}px;
-        height: ${6+Math.random()*8}px;
-        border-radius: ${Math.random()>0.5?'50%':'0'};
-      `;
-      document.body.appendChild(piece);
-      setTimeout(() => piece.remove(), 4000);
-    }, i * 30);
-  }
-}
-
-function restartGame() {
-  state = { guts: 40, chara: 30, imp: 20, scene: 0, typing: false, pendingNext: null };
-  updateStats();
-  document.getElementById('clear-screen').classList.remove('show');
-  document.getElementById('gameover-screen').classList.remove('show');
-  document.getElementById('stage-label').textContent = '第１関門';
-  document.getElementById('progress-fill').style.width = '0%';
-  renderScene('intro');
-}
-
-// ===== START =====
-renderScene('intro');
-</script>
+    (function tick() {
+      c.clearRect(0, 0, canvas.width, canvas.height);
+      dots.forEach(d => {
+        d.y -= 0.0003 + Math.abs(d.s);
+        if (d.y < 0) d.y = 1;
+        d.a += d.s;
+        c.beginPath();
+        c.arc(d.x * canvas.width, d.y * canvas.height, d.r, 0, Math.PI * 2);
+        c.fillStyle = `rgba(0,212,255,${0.3 + Math.abs(Math.sin(d.a)) * 0.5})`;
+        c.fill();
+      });
+      requestAnimationFrame(tick);
+    })();
+  </script>
 
 </body>
 </html>
