@@ -4,29 +4,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GAME ARCADE</title>
+  <title>0258 見附市ゲーム倶楽部</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;900&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
   <style>
-    /* ==============================
-       RESET & BASE
-    ============================== */
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
 ```
 :root {
-  --bg:        #07080d;
-  --panel:     #0d0f18;
-  --border:    #1e2235;
-  --glow-r:    #ff2d55;
-  --glow-b:    #00d4ff;
-  --glow-g:    #39ff14;
-  --glow-y:    #ffe500;
-  --text:      #e8eaf0;
-  --muted:     #4a4e6a;
-  --mono:      'Share Tech Mono', monospace;
-  --display:   'Bebas Neue', sans-serif;
-  --body-f:    'Noto Sans JP', sans-serif;
+  --bg: #000000;
+  --surface: #0a0a0a;
+  --surface2: #0e0e11;
+  --border: rgba(255,255,255,0.07);
+  --text: #f0f0f0;
+  --muted: #555;
+  --accent1: #e8ff47;
+  --accent2: #ff3cac;
+  --accent3: #00d4ff;
 }
 
 html { scroll-behavior: smooth; }
@@ -34,420 +28,334 @@ html { scroll-behavior: smooth; }
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: var(--body-f);
+  font-family: 'Outfit', 'Noto Sans JP', sans-serif;
   min-height: 100vh;
   overflow-x: hidden;
-  cursor: crosshair;
 }
 
-/* ── CRT ノイズ・スキャンライン ── */
-body::before {
-  content: '';
-  position: fixed; inset: 0; z-index: 9999;
-  pointer-events: none;
-  background:
-    repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 3px,
-      rgba(0,0,0,0.08) 3px,
-      rgba(0,0,0,0.08) 4px
-    );
-  animation: flicker 8s infinite;
-}
-@keyframes flicker {
-  0%,100%{ opacity:1 } 92%{ opacity:1 } 93%{ opacity:0.85 } 94%{ opacity:1 } 97%{ opacity:0.95 }
-}
-
-/* ── グリッドノイズ背景 ── */
-body::after {
-  content: '';
-  position: fixed; inset: 0; z-index: 0; pointer-events: none;
-  background-image:
-    linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
-  background-size: 40px 40px;
-}
-
-/* ==============================
-   HEADER
-============================== */
-header {
-  position: relative; z-index: 10;
-  padding: 60px 24px 48px;
-  text-align: center;
+/* ==============================  NAV  */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 40px;
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border);
 }
+.nav-logo {
+  font-size: 13px; font-weight: 700; letter-spacing: 2px;
+  color: var(--text);
+  display: flex; align-items: center; gap: 10px;
+}
+.nav-logo .dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--accent1);
+  box-shadow: 0 0 10px var(--accent1);
+  animation: dotPulse 2s ease-in-out infinite;
+}
+@keyframes dotPulse {
+  0%,100%{ box-shadow: 0 0 6px var(--accent1); }
+  50%{ box-shadow: 0 0 18px var(--accent1), 0 0 30px var(--accent1); }
+}
+.nav-badge { font-size: 11px; color: var(--muted); letter-spacing: 1px; }
 
-.site-eyebrow {
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 6px;
-  color: var(--glow-b);
-  text-transform: uppercase;
-  margin-bottom: 20px;
-  animation: fadeUp 0.6s ease both;
+/* ==============================  HERO  */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 120px 24px 80px;
+  text-align: center;
+  overflow: hidden;
 }
 
-.site-title {
-  font-family: var(--display);
-  font-size: clamp(64px, 14vw, 130px);
-  line-height: 0.9;
-  letter-spacing: 4px;
-  /* ネオン分割カラー */
-  background: linear-gradient(
-    180deg,
-    #ffffff 0%,
-    #ffffff 45%,
-    var(--glow-r) 45%,
-    var(--glow-r) 100%
-  );
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  text-shadow: none;
-  position: relative;
+.hero-glow {
+  position: absolute; border-radius: 50%;
+  filter: blur(120px); pointer-events: none;
+}
+.hero-glow.g1 {
+  width: 600px; height: 600px;
+  background: rgba(232,255,71,0.06);
+  top: -100px; left: -200px;
+  animation: driftA 12s ease-in-out infinite alternate;
+}
+.hero-glow.g2 {
+  width: 500px; height: 500px;
+  background: rgba(255,60,172,0.06);
+  bottom: -100px; right: -150px;
+  animation: driftB 15s ease-in-out infinite alternate;
+}
+.hero-glow.g3 {
+  width: 400px; height: 400px;
+  background: rgba(0,212,255,0.04);
+  top: 40%; left: 50%; transform: translate(-50%,-50%);
+  animation: driftA 18s ease-in-out infinite alternate-reverse;
+}
+@keyframes driftA { to{ transform: translate(60px,40px); } }
+@keyframes driftB { to{ transform: translate(-60px,-40px); } }
+
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-size: 11px; font-weight: 600; letter-spacing: 4px;
+  color: var(--muted); text-transform: uppercase;
+  margin-bottom: 28px;
+  animation: fadeUp 0.8s ease both;
+}
+.hero-eyebrow::before, .hero-eyebrow::after {
+  content: ''; width: 32px; height: 1px; background: var(--muted);
+}
+
+.hero-number {
+  display: block;
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(80px, 22vw, 200px);
+  font-weight: 900; line-height: 0.85; letter-spacing: -4px;
+  color: transparent;
+  -webkit-text-stroke: 1.5px rgba(255,255,255,0.1);
+  pointer-events: none;
+  animation: fadeUp 0.7s 0.05s ease both;
+}
+.hero-number .hi { -webkit-text-stroke: 1.5px var(--accent1); }
+
+.hero-title {
+  font-size: clamp(22px, 5vw, 48px);
+  font-weight: 900; letter-spacing: 0.02em; line-height: 1.2;
+  margin-top: 8px;
   animation: fadeUp 0.7s 0.1s ease both;
 }
+.hero-title .accent { color: var(--accent1); }
 
-/* タイトルのネオングロー（疑似要素で重ねる） */
-.site-title-wrap {
-  position: relative; display: inline-block;
-}
-.site-title-wrap::after {
-  content: 'GAME ARCADE';
-  position: absolute; inset: 0;
-  font-family: var(--display);
-  font-size: clamp(64px, 14vw, 130px);
-  line-height: 0.9;
-  letter-spacing: 4px;
-  color: transparent;
-  -webkit-text-stroke: 1px rgba(0,212,255,0.25);
-  filter: blur(12px);
-  pointer-events: none;
-  animation: titlePulse 4s ease-in-out infinite;
-}
-@keyframes titlePulse {
-  0%,100%{ filter:blur(12px); opacity:0.6; }
-  50%{ filter:blur(20px); opacity:1; }
-}
-
-.site-subtitle {
-  font-family: var(--mono);
-  font-size: 13px;
-  color: var(--muted);
-  letter-spacing: 3px;
+.hero-sub {
   margin-top: 16px;
-  animation: fadeUp 0.7s 0.2s ease both;
+  font-size: 13px; font-weight: 400;
+  color: var(--muted); letter-spacing: 3px;
+  animation: fadeUp 0.7s 0.18s ease both;
 }
 
-/* コイン投入アニメ */
-.insert-coin {
-  margin-top: 28px;
-  font-family: var(--mono);
-  font-size: 14px;
-  color: var(--glow-y);
-  letter-spacing: 4px;
-  animation: coinBlink 1.4s step-end infinite, fadeUp 0.8s 0.4s ease both;
+.hero-cta {
+  margin-top: 48px;
+  display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;
+  animation: fadeUp 0.7s 0.26s ease both;
 }
-@keyframes coinBlink { 0%,100%{opacity:1} 50%{opacity:0} }
-
-/* ==============================
-   GAME COUNT BADGE
-============================== */
-.game-count {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 40px;
-  background: rgba(0,212,255,0.06);
-  border: 1px solid rgba(0,212,255,0.2);
-  padding: 8px 20px;
-  font-family: var(--mono);
-  font-size: 12px;
-  color: var(--glow-b);
-  letter-spacing: 3px;
-  animation: fadeUp 0.8s 0.3s ease both;
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--accent1); color: #000;
+  font-size: 13px; font-weight: 700; letter-spacing: 1px;
+  padding: 14px 32px; border-radius: 100px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 30px rgba(232,255,71,0.2);
 }
-.game-count span { color: var(--text); font-size: 16px; font-weight: 900; }
+.btn-primary:hover {
+  background: #f5ff80;
+  box-shadow: 0 0 50px rgba(232,255,71,0.45);
+  transform: translateY(-2px);
+}
+.btn-ghost {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: transparent; color: var(--text);
+  font-size: 13px; font-weight: 600; letter-spacing: 1px;
+  padding: 13px 28px; border-radius: 100px;
+  border: 1px solid var(--border);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+.btn-ghost:hover {
+  border-color: rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.04);
+  transform: translateY(-2px);
+}
 
-/* ==============================
-   GAME GRID
-============================== */
+.hero-stats {
+  margin-top: 64px;
+  display: flex; gap: 40px; justify-content: center; flex-wrap: wrap;
+  animation: fadeUp 0.7s 0.32s ease both;
+}
+.stat-item { text-align: center; }
+.stat-num { display: block; font-size: 36px; font-weight: 900; line-height: 1; }
+.stat-label { display: block; font-size: 10px; letter-spacing: 3px; color: var(--muted); margin-top: 4px; text-transform: uppercase; }
+.stat-div { opacity: 0.2; font-size: 28px; line-height: 1; margin-top: 4px; }
+
+.scroll-hint {
+  position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  font-size: 10px; letter-spacing: 3px; color: var(--muted);
+  animation: fadeUp 1s 0.5s ease both;
+}
+.scroll-line {
+  width: 1px; height: 40px;
+  background: linear-gradient(to bottom, var(--muted), transparent);
+  animation: scrollDrop 1.8s ease-in-out infinite;
+}
+@keyframes scrollDrop {
+  0%,100%{ opacity:1; transform: scaleY(1); }
+  50%{ opacity:0.3; transform: scaleY(0.5); }
+}
+
+/* ==============================  GAMES SECTION  */
 .games-section {
-  position: relative; z-index: 10;
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 64px 24px 80px;
+  max-width: 1200px; margin: 0 auto;
+  padding: 80px 24px 120px;
 }
 
-.section-label {
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 5px;
-  color: var(--muted);
-  text-transform: uppercase;
-  margin-bottom: 32px;
-  display: flex;
-  align-items: center;
+.section-header {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  margin-bottom: 48px; gap: 16px;
+}
+.section-tag { font-size: 10px; letter-spacing: 4px; color: var(--muted); text-transform: uppercase; margin-bottom: 10px; }
+.section-title { font-size: clamp(28px, 4vw, 40px); font-weight: 900; line-height: 1.1; }
+.section-count { font-size: 80px; font-weight: 900; color: rgba(255,255,255,0.03); line-height: 1; letter-spacing: -2px; flex-shrink: 0; }
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 16px;
 }
-.section-label::before, .section-label::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--border));
-}
-.section-label::before {
-  background: linear-gradient(90deg, var(--border), transparent);
-}
+@media (max-width: 900px) { .cards-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 580px) { .cards-grid { grid-template-columns: 1fr; } }
 
-.games-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2px;
-}
-
-/* ── ゲームカード ── */
 .game-card {
   position: relative;
-  display: block;
-  text-decoration: none;
-  background: var(--panel);
-  overflow: hidden;
-  transition: transform 0.25s ease;
-  animation: fadeUp 0.6s ease both;
+  display: flex; flex-direction: column;
+  background: var(--surface2);
   border: 1px solid var(--border);
+  border-radius: 16px; overflow: hidden;
+  text-decoration: none; color: inherit;
+  transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  animation: fadeUp 0.6s ease both;
 }
-.game-card:nth-child(1){ animation-delay: 0.15s; }
-.game-card:nth-child(2){ animation-delay: 0.25s; }
-.game-card:nth-child(3){ animation-delay: 0.35s; }
+.game-card:nth-child(1){ animation-delay: 0.1s; }
+.game-card:nth-child(2){ animation-delay: 0.18s; }
+.game-card:nth-child(3){ animation-delay: 0.26s; }
+.game-card:hover { transform: translateY(-6px); }
+.game-card.c-bd:hover    { border-color: rgba(255,60,172,0.4); box-shadow: 0 20px 60px rgba(255,60,172,0.1); }
+.game-card.c-futon:hover { border-color: rgba(232,255,71,0.35); box-shadow: 0 20px 60px rgba(232,255,71,0.08); }
+.game-card.c-nameko:hover{ border-color: rgba(0,212,255,0.4); box-shadow: 0 20px 60px rgba(0,212,255,0.1); }
 
-.game-card:hover {
-  transform: translateY(-4px);
-  z-index: 2;
-}
-
-/* カード上部：アートエリア */
-.card-art {
-  position: relative;
-  height: 200px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.card-visual {
+  position: relative; height: 200px;
+  display: flex; align-items: center; justify-content: center;
   overflow: hidden;
 }
+.c-bd    .card-visual { background: radial-gradient(ellipse at 40% 40%, #180512 0%, #0a0008 100%); }
+.c-futon .card-visual { background: radial-gradient(ellipse at 40% 40%, #131608 0%, #08090a 100%); }
+.c-nameko .card-visual { background: radial-gradient(ellipse at 40% 40%, #041518 0%, #020809 100%); }
 
-/* ゲームごとの背景カラー */
-.card-art.bd {
-  background: radial-gradient(ellipse at 50% 60%, #2a0a0a 0%, #0d0005 100%);
-}
-.card-art.futon {
-  background: radial-gradient(ellipse at 50% 60%, #0e0a2a 0%, #050010 100%);
-}
-.card-art.nameko {
-  background: radial-gradient(ellipse at 50% 60%, #051a2a 0%, #010a0d 100%);
-}
-
-/* アートエリアの内側グリッドライン装飾 */
-.card-art::before {
-  content: '';
-  position: absolute; inset: 0;
+.card-visual::before {
+  content: ''; position: absolute; inset: 0;
   background-image:
-    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
-  background-size: 20px 20px;
+    linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+.card-visual::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+}
+.c-bd    .card-visual::after { background: linear-gradient(90deg, transparent, var(--accent2), transparent); }
+.c-futon .card-visual::after { background: linear-gradient(90deg, transparent, var(--accent1), transparent); }
+.c-nameko .card-visual::after { background: linear-gradient(90deg, transparent, var(--accent3), transparent); }
+
+.card-emoji {
+  font-size: 68px; position: relative; z-index: 1;
+  filter: drop-shadow(0 0 28px rgba(255,255,255,0.08));
+  animation: floatIcon 3.5s ease-in-out infinite;
+}
+.game-card:nth-child(2) .card-emoji { animation-delay: -1.2s; }
+.game-card:nth-child(3) .card-emoji { animation-delay: -2.4s; }
+@keyframes floatIcon { 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-10px); } }
+
+.card-num {
+  position: absolute; top: 16px; left: 18px;
+  font-size: 11px; font-weight: 700; letter-spacing: 2px;
+  color: rgba(255,255,255,0.18);
 }
 
-/* アートエリアのアクセントライン（左辺） */
-.card-art::after {
-  content: '';
-  position: absolute;
-  left: 0; top: 0; bottom: 0;
-  width: 3px;
-}
-.card-art.bd::after   { background: var(--glow-r); box-shadow: 0 0 16px var(--glow-r); }
-.card-art.futon::after { background: #c084fc; box-shadow: 0 0 16px #c084fc; }
-.card-art.nameko::after { background: var(--glow-b); box-shadow: 0 0 16px var(--glow-b); }
-
-/* ゲームの大きな絵文字アイコン */
-.card-icon {
-  font-size: 72px;
-  filter: drop-shadow(0 0 24px rgba(255,255,255,0.2));
-  animation: iconFloat 3s ease-in-out infinite;
-  position: relative; z-index: 1;
-}
-.game-card:nth-child(2) .card-icon { animation-delay: -1s; }
-.game-card:nth-child(3) .card-icon { animation-delay: -2s; }
-@keyframes iconFloat {
-  0%,100%{ transform:translateY(0) scale(1); }
-  50%{ transform:translateY(-8px) scale(1.04); }
-}
-
-/* ホバー時のスキャンライン sweep */
-.card-sweep {
-  position: absolute; inset: 0;
-  background: linear-gradient(
-    180deg,
-    transparent 0%,
-    rgba(255,255,255,0.04) 50%,
-    transparent 100%
-  );
-  transform: translateY(-100%);
-  transition: transform 0s;
-  pointer-events: none;
-}
-.game-card:hover .card-sweep {
-  transform: translateY(100%);
-  transition: transform 0.5s ease;
-}
-
-/* 「PLAY」オーバーレイ */
-.card-play-overlay {
+.card-overlay {
   position: absolute; inset: 0;
   display: flex; align-items: center; justify-content: center;
-  background: rgba(0,0,0,0);
-  transition: background 0.2s ease;
+  opacity: 0; transition: opacity 0.25s ease;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(2px);
 }
-.game-card:hover .card-play-overlay {
-  background: rgba(0,0,0,0.35);
+.game-card:hover .card-overlay { opacity: 1; }
+.play-pill {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 24px; border-radius: 100px;
+  font-size: 13px; font-weight: 700; letter-spacing: 1px;
+  transform: scale(0.88) translateY(6px);
+  transition: transform 0.25s ease;
 }
-.play-label {
-  font-family: var(--display);
-  font-size: 42px;
-  letter-spacing: 6px;
-  color: #fff;
-  opacity: 0;
-  transform: scale(0.85);
-  transition: opacity 0.2s ease, transform 0.2s ease;
-}
-.game-card:hover .play-label {
-  opacity: 1;
-  transform: scale(1);
-}
+.c-bd    .play-pill { background: var(--accent2); color: #fff; }
+.c-futon .play-pill { background: var(--accent1); color: #000; }
+.c-nameko .play-pill { background: var(--accent3); color: #000; }
+.game-card:hover .play-pill { transform: scale(1) translateY(0); }
 
-/* カード下部：テキストエリア */
 .card-body {
-  padding: 20px 22px 22px;
-  border-top: 1px solid var(--border);
+  padding: 22px 22px 24px;
+  display: flex; flex-direction: column; flex: 1;
 }
-
 .card-genre {
-  font-family: var(--mono);
-  font-size: 9px;
-  letter-spacing: 4px;
-  text-transform: uppercase;
-  margin-bottom: 8px;
+  font-size: 10px; letter-spacing: 3px; font-weight: 600;
+  text-transform: uppercase; margin-bottom: 10px;
 }
-.bd   .card-genre { color: var(--glow-r); }
-.futon .card-genre { color: #c084fc; }
-.nameko .card-genre { color: var(--glow-b); }
+.c-bd    .card-genre { color: var(--accent2); }
+.c-futon .card-genre { color: var(--accent1); }
+.c-nameko .card-genre { color: var(--accent3); }
 
-/* カード名をボディ側でも参照できるようクラスを付ける */
-.card-body.bd .card-genre   { color: var(--glow-r); }
-.card-body.futon .card-genre { color: #c084fc; }
-.card-body.nameko .card-genre { color: var(--glow-b); }
+.card-title { font-size: 20px; font-weight: 900; line-height: 1.25; margin-bottom: 10px; }
+.card-desc { font-size: 12px; color: var(--muted); line-height: 1.75; flex: 1; }
 
-.card-title {
-  font-family: var(--display);
-  font-size: 28px;
-  letter-spacing: 2px;
-  color: var(--text);
-  line-height: 1.1;
-  margin-bottom: 8px;
-}
-
-.card-desc {
-  font-size: 12px;
-  color: var(--muted);
-  line-height: 1.7;
-  letter-spacing: 0.5px;
-}
-
-/* カード下のCTA行 */
 .card-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 16px;
-  padding-top: 14px;
-  border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border);
 }
-
 .card-tag {
-  font-family: var(--mono);
-  font-size: 9px;
-  letter-spacing: 2px;
-  padding: 3px 8px;
-  border: 1px solid;
+  font-size: 10px; letter-spacing: 2px; font-weight: 600;
+  padding: 4px 10px; border-radius: 100px; border: 1px solid;
 }
-.bd   .card-tag { border-color: var(--glow-r); color: var(--glow-r); }
-.futon .card-tag { border-color: #c084fc; color: #c084fc; }
-.nameko .card-tag { border-color: var(--glow-b); color: var(--glow-b); }
+.c-bd    .card-tag { border-color: rgba(255,60,172,0.3); color: var(--accent2); }
+.c-futon .card-tag { border-color: rgba(232,255,71,0.3); color: var(--accent1); }
+.c-nameko .card-tag { border-color: rgba(0,212,255,0.3); color: var(--accent3); }
 
 .card-arrow {
-  font-size: 18px;
-  transition: transform 0.2s ease;
+  width: 32px; height: 32px; border-radius: 50%;
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; color: var(--muted);
+  transition: all 0.2s ease;
 }
-.game-card:hover .card-arrow { transform: translateX(6px); }
-
-/* ホバー時のグロー縁 */
-.game-card::before {
-  content: '';
-  position: absolute; inset: 0;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
+.game-card:hover .card-arrow {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.15);
+  color: var(--text); transform: translateX(3px);
 }
-.game-card.bd::before   { box-shadow: inset 0 0 40px rgba(255,45,85,0.12); opacity: 0; }
-.game-card.futon::before { box-shadow: inset 0 0 40px rgba(192,132,252,0.12); opacity: 0; }
-.game-card.nameko::before { box-shadow: inset 0 0 40px rgba(0,212,255,0.12); opacity: 0; }
-.game-card:hover::before { opacity: 1; }
 
-/* ==============================
-   FOOTER
-============================== */
+/* ==============================  DIVIDER  */
+.divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+  margin: 0 40px;
+}
+
+/* ==============================  FOOTER  */
 footer {
-  position: relative; z-index: 10;
-  border-top: 1px solid var(--border);
-  padding: 32px 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
+  padding: 40px;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 16px;
 }
+.footer-name { font-size: 14px; font-weight: 700; letter-spacing: 1px; }
+.footer-sub { font-size: 11px; color: var(--muted); letter-spacing: 2px; margin-top: 4px; }
+.footer-right { font-size: 11px; color: var(--muted); letter-spacing: 1px; }
 
-.footer-logo {
-  font-family: var(--display);
-  font-size: 22px;
-  letter-spacing: 3px;
-  color: var(--muted);
-}
-
-.footer-copy {
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--muted);
-  letter-spacing: 2px;
-}
-
-/* ==============================
-   SHARED ANIMATION
-============================== */
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(20px); }
+  from { opacity: 0; transform: translateY(24px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-
-/* ==============================
-   RESPONSIVE
-============================== */
 @media (max-width: 640px) {
-  header { padding: 40px 16px 36px; }
-  .games-section { padding: 40px 0 60px; }
-  .game-card { border-left: none; border-right: none; }
-  .games-grid { gap: 1px; }
+  nav { padding: 16px 20px; }
+  footer { padding: 32px 20px; }
 }
 ```
 
@@ -455,144 +363,136 @@ footer {
 </head>
 <body>
 
-  <!-- ヘッダー -->
+<nav>
+  <div class="nav-logo">
+    <div class="dot"></div>
+    0258 見附市ゲーム倶楽部
+  </div>
+  <div class="nav-badge">NIIGATA / MITSUKE</div>
+</nav>
 
-  <header>
-    <div class="site-eyebrow">✦ WELCOME TO ✦</div>
-    <div class="site-title-wrap">
-      <h1 class="site-title">GAME ARCADE</h1>
+<section class="hero">
+  <div class="hero-glow g1"></div>
+  <div class="hero-glow g2"></div>
+  <div class="hero-glow g3"></div>
+
+  <div class="hero-eyebrow">Niigata · Mitsuke City</div>
+
+  <div class="hero-number"><span class="hi">02</span>58</div>
+
+  <h1 class="hero-title">見附市<span class="accent">ゲーム</span>倶楽部</h1>
+  <p class="hero-sub">MITSUKE CITY GAME CLUB</p>
+
+  <div class="hero-cta">
+    <a href="#games" class="btn-primary">ゲームを選ぶ ↓</a>
+    <a href="#games" class="btn-ghost">03 GAMES AVAILABLE</a>
+  </div>
+
+  <div class="hero-stats">
+    <div class="stat-item">
+      <span class="stat-num">03</span>
+      <span class="stat-label">Games</span>
     </div>
-    <p class="site-subtitle">— BROWSER GAMES COLLECTION —</p>
-    <p class="insert-coin">▶ INSERT COIN TO PLAY ◀</p>
-    <div class="game-count">
-      TOTAL GAMES &nbsp;/&nbsp; <span>03</span>
+    <div class="stat-item">
+      <span class="stat-num stat-div">|</span>
     </div>
-  </header>
+    <div class="stat-item">
+      <span class="stat-num">∞</span>
+      <span class="stat-label">Free to Play</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num stat-div">|</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num">📱</span>
+      <span class="stat-label">Mobile OK</span>
+    </div>
+  </div>
 
-  <!-- ゲーム一覧 -->
+  <div class="scroll-hint">
+    <div class="scroll-line"></div>
+    SCROLL
+  </div>
+</section>
 
-  <main class="games-section">
-    <div class="section-label">SELECT YOUR GAME</div>
+<div class="divider"></div>
+
+<section class="games-section" id="games">
+  <div class="section-header">
+    <div>
+      <div class="section-tag">— Game Library</div>
+      <h2 class="section-title">全ゲーム一覧</h2>
+    </div>
+    <div class="section-count">03</div>
+  </div>
+
+  <div class="cards-grid">
 
 ```
-<div class="games-grid">
+<a class="game-card c-bd" href="breakingdown_interview.html">
+  <div class="card-visual">
+    <span class="card-num">01</span>
+    <div class="card-emoji">⚡</div>
+    <div class="card-overlay"><div class="play-pill">▶ PLAY NOW</div></div>
+  </div>
+  <div class="card-body">
+    <div class="card-genre">Interview Sim</div>
+    <h3 class="card-title">BreakingDown<br>面接ゲーム</h3>
+    <p class="card-desc">朝倉未来の審査を突破し、本戦出場権を勝ち取れ。度胸・キャラ・印象の三択が命運を分ける。</p>
+    <div class="card-footer">
+      <span class="card-tag">VISUAL NOVEL</span>
+      <div class="card-arrow">→</div>
+    </div>
+  </div>
+</a>
 
-  <!-- ① BreakingDown 面接ゲーム -->
-  <a class="game-card bd" href="breakingdown_interview.html">
-    <div class="card-art bd">
-      <div class="card-sweep"></div>
-      <div class="card-icon">⚡</div>
-      <div class="card-play-overlay">
-        <div class="play-label">PLAY</div>
-      </div>
+<a class="game-card c-futon" href="futon_game.html">
+  <div class="card-visual">
+    <span class="card-num">02</span>
+    <div class="card-emoji">🛌</div>
+    <div class="card-overlay"><div class="play-pill">▶ PLAY NOW</div></div>
+  </div>
+  <div class="card-body">
+    <div class="card-genre">Stream Simulator</div>
+    <h3 class="card-title">布団ちゃん<br>配信シミュレーター</h3>
+    <p class="card-desc">同接10万人を目指してリアルタイム雑談配信。炎上・寝落ち・スパチャが押し寄せる。</p>
+    <div class="card-footer">
+      <span class="card-tag">SIMULATION</span>
+      <div class="card-arrow">→</div>
     </div>
-    <div class="card-body">
-      <div class="card-genre bd">Visual Novel / Interview</div>
-      <h2 class="card-title">BREAKING DOWN<br>面接ゲーム</h2>
-      <p class="card-desc">朝倉未来に認められろ。選択肢で度胸・キャラ・印象を上げ、BreakingDown本戦の出場権を勝ち取れ。</p>
-      <div class="card-footer">
-        <span class="card-tag bd">INTERVIEW SIM</span>
-        <span class="card-arrow">→</span>
-      </div>
-    </div>
-  </a>
+  </div>
+</a>
 
-  <!-- ② 布団ちゃん配信シミュレーター -->
-  <a class="game-card futon" href="futon_game.html">
-    <div class="card-art futon">
-      <div class="card-sweep"></div>
-      <div class="card-icon">🛌</div>
-      <div class="card-play-overlay">
-        <div class="play-label">PLAY</div>
-      </div>
+<a class="game-card c-nameko" href="nameko_shooter.html">
+  <div class="card-visual">
+    <span class="card-num">03</span>
+    <div class="card-emoji">🍄</div>
+    <div class="card-overlay"><div class="play-pill">▶ PLAY NOW</div></div>
+  </div>
+  <div class="card-body">
+    <div class="card-genre">2D Shooter</div>
+    <h3 class="card-title">なめこ<br>シューティング</h3>
+    <p class="card-desc">ジャンボジェットで空を駆け、降り注ぐなめこを撃ち落とせ。スマホ・PC両対応。</p>
+    <div class="card-footer">
+      <span class="card-tag">ACTION</span>
+      <div class="card-arrow">→</div>
     </div>
-    <div class="card-body">
-      <div class="card-genre futon">Simulation / Streaming</div>
-      <h2 class="card-title">布団ちゃん<br>配信SIM</h2>
-      <p class="card-desc">コメントが飛び交うリアルタイム雑談配信。同接10万人を目指せ。炎上・寝落ち・スパチャ待ってるぞ。</p>
-      <div class="card-footer">
-        <span class="card-tag futon">STREAM SIM</span>
-        <span class="card-arrow">→</span>
-      </div>
-    </div>
-  </a>
-
-  <!-- ③ なめこシューティング -->
-  <a class="game-card nameko" href="nameko_shooter.html">
-    <div class="card-art nameko">
-      <div class="card-sweep"></div>
-      <div class="card-icon">🍄</div>
-      <div class="card-play-overlay">
-        <div class="play-label">PLAY</div>
-      </div>
-    </div>
-    <div class="card-body">
-      <div class="card-genre nameko">Shooting / Action</div>
-      <h2 class="card-title">なめこ<br>シューティング</h2>
-      <p class="card-desc">ジャンボジェットで空を飛び、降り注ぐなめこを撃ち落とせ。スマホにも対応。何匹倒せるか？</p>
-      <div class="card-footer">
-        <span class="card-tag nameko">2D SHOOTER</span>
-        <span class="card-arrow">→</span>
-      </div>
-    </div>
-  </a>
-
-</div>
+  </div>
+</a>
 ```
 
-  </main>
+  </div>
+</section>
 
-  <!-- フッター -->
+<div class="divider"></div>
 
-  <footer>
-    <div class="footer-logo">GAME ARCADE</div>
-    <div class="footer-copy">© 2025 &nbsp;·&nbsp; ALL GAMES PLAYABLE IN BROWSER</div>
-  </footer>
-
-  <script>
-    // カードにホバーした瞬間、アクセントカラーに応じたグロー border を動的に付加
-    document.querySelectorAll('.game-card').forEach(card => {
-      const colors = { bd: '#ff2d55', futon: '#c084fc', nameko: '#00d4ff' };
-      const key = [...card.classList].find(c => colors[c]);
-      if (!key) return;
-      card.addEventListener('mouseenter', () => {
-        card.style.borderColor = colors[key];
-        card.style.boxShadow   = `0 0 32px ${colors[key]}22, 0 20px 60px rgba(0,0,0,0.6)`;
-      });
-      card.addEventListener('mouseleave', () => {
-        card.style.borderColor = '';
-        card.style.boxShadow   = '';
-      });
-    });
-
-    // パーティクル：背景のランダム光点
-    const canvas = document.createElement('canvas');
-    canvas.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:1;opacity:0.4';
-    document.body.prepend(canvas);
-    const c = canvas.getContext('2d');
-    const dots = Array.from({length: 60}, () => ({
-      x: Math.random(), y: Math.random(),
-      r: Math.random() * 1.5 + 0.3,
-      s: (Math.random() - 0.5) * 0.0002,
-      a: Math.random()
-    }));
-    function resize() { canvas.width = innerWidth; canvas.height = innerHeight; }
-    resize(); window.addEventListener('resize', resize);
-
-    (function tick() {
-      c.clearRect(0, 0, canvas.width, canvas.height);
-      dots.forEach(d => {
-        d.y -= 0.0003 + Math.abs(d.s);
-        if (d.y < 0) d.y = 1;
-        d.a += d.s;
-        c.beginPath();
-        c.arc(d.x * canvas.width, d.y * canvas.height, d.r, 0, Math.PI * 2);
-        c.fillStyle = `rgba(0,212,255,${0.3 + Math.abs(Math.sin(d.a)) * 0.5})`;
-        c.fill();
-      });
-      requestAnimationFrame(tick);
-    })();
-  </script>
+<footer>
+  <div>
+    <div class="footer-name">0258 見附市ゲーム倶楽部</div>
+    <div class="footer-sub">MITSUKE CITY GAME CLUB · NIIGATA</div>
+  </div>
+  <div class="footer-right">All games free to play in browser</div>
+</footer>
 
 </body>
-</html>
+</html></html>
