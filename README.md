@@ -1,2 +1,0 @@
-# shoot-mitsuke
-go!
