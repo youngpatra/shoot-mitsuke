@@ -201,6 +201,24 @@ margin-right: 10px;
 font-size: 13px;
 }
 
+/* SECRET CHOICE — special styling */
+.choice-btn.secret {
+border-left-color: #ff00ff;
+color: #ccc;
+font-style: italic;
+opacity: 0.75;
+}
+.choice-btn.secret:hover {
+background: #1a001a;
+border-left-color: #ff00ff;
+color: #ff88ff;
+opacity: 1;
+transform: translateX(4px);
+}
+.choice-btn.secret .choice-num {
+color: #ff00ff;
+}
+
 /* STATS BAR */
 #stats-bar {
 display: flex;
@@ -283,6 +301,7 @@ align-items: center;
 justify-content: center;
 flex-direction: column;
 text-align: center;
+padding: 20px;
 }
 #clear-screen.show { display: flex; animation: clearIn 0.8s ease; }
 @keyframes clearIn { from { opacity: 0; } to { opacity: 1; } }
@@ -350,6 +369,84 @@ font-size: 16px;
 color: var(–gray);
 margin-bottom: 40px;
 letter-spacing: 1px;
+}
+
+/* SECRET CLEAR SCREEN */
+#secret-screen {
+display: none;
+position: fixed;
+inset: 0;
+background: #000;
+z-index: 1000;
+align-items: center;
+justify-content: center;
+flex-direction: column;
+text-align: center;
+padding: 20px;
+overflow: hidden;
+}
+#secret-screen.show { display: flex; animation: clearIn 0.8s ease; }
+
+.secret-title {
+font-family: ‘Black Han Sans’, sans-serif;
+font-size: 44px;
+background: linear-gradient(90deg, #ff00ff, #f5c518, #ff00ff);
+background-size: 200% auto;
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+background-clip: text;
+animation: shimmer 1.5s linear infinite, pulseScale 0.5s ease infinite alternate;
+margin-bottom: 12px;
+}
+@keyframes shimmer { to { background-position: 200% center; } }
+@keyframes pulseScale { from { transform: scale(1); } to { transform: scale(1.06); } }
+
+.dancing-row {
+display: flex;
+gap: 24px;
+font-size: 48px;
+margin: 20px 0;
+}
+.dancing-row span {
+display: inline-block;
+animation: dance 0.4s ease infinite alternate;
+}
+.dancing-row span:nth-child(1) { animation-delay: 0s; }
+.dancing-row span:nth-child(2) { animation-delay: 0.1s; }
+.dancing-row span:nth-child(3) { animation-delay: 0.2s; }
+.dancing-row span:nth-child(4) { animation-delay: 0.3s; }
+.dancing-row span:nth-child(5) { animation-delay: 0.4s; }
+@keyframes dance {
+from { transform: translateY(0) rotate(-8deg); }
+to   { transform: translateY(-18px) rotate(8deg); }
+}
+
+.onigoya-lyrics {
+font-size: 20px;
+font-weight: 900;
+color: #ff88ff;
+letter-spacing: 3px;
+margin: 10px 0 4px;
+text-shadow: 0 0 20px rgba(255,0,255,0.6);
+animation: lyricFlash 0.8s step-end infinite;
+}
+@keyframes lyricFlash {
+0%,100% { opacity: 1; }
+50% { opacity: 0.4; }
+}
+
+.secret-quote {
+font-size: 22px;
+font-weight: 900;
+color: var(–gold);
+margin: 16px 0 6px;
+letter-spacing: 2px;
+}
+.secret-sub {
+font-size: 13px;
+color: var(–gray);
+letter-spacing: 2px;
+margin-bottom: 36px;
 }
 
 /* PARTICLE EFFECTS */
@@ -448,6 +545,8 @@ transition: width 0.5s ease;
 
 <div id="notification"></div>
 
+<!-- 通常クリア画面 -->
+
 <div id="clear-screen">
   <div style="font-size:14px;color:var(--gray);letter-spacing:4px;margin-bottom:20px">— 朝倉未来 —</div>
   <div class="clear-quote">「そこ試合決定で。」</div>
@@ -458,10 +557,29 @@ transition: width 0.5s ease;
   <button id="restart-btn" onclick="restartGame()">もう一度やる</button>
 </div>
 
+<!-- 裏技クリア画面 -->
+
+<div id="secret-screen">
+  <div style="font-size:11px;color:#ff00ff;letter-spacing:5px;margin-bottom:8px">★ SECRET ROUTE ★</div>
+  <div class="secret-title">🎤 LEGENDARY CLEAR 🎤</div>
+  <div class="onigoya-lyrics">♪ オニゴヤ オニゴヤ ♪</div>
+  <div class="dancing-row">
+    <span>💃</span><span>🕺</span><span>👊</span><span>🕺</span><span>💃</span>
+  </div>
+  <div style="font-size:14px;color:#ff88ff;margin-bottom:4px;letter-spacing:1px">ひな壇が踊り出した——！！</div>
+  <div class="secret-quote">「試合決定で！！！」</div>
+  <div class="secret-sub">— 朝倉未来、号泣しながら —</div>
+  <div style="font-size:13px;color:var(--gray);margin-bottom:8px">あなたのオニゴヤ熱唱により<br>会場が完全崩壊。即本戦出場。</div>
+  <div style="height:2px;width:240px;background:linear-gradient(90deg,#ff00ff,#f5c518);margin:16px auto 28px"></div>
+  <button id="restart-btn" onclick="restartGame()" style="background:linear-gradient(90deg,#990099,#cc6600);border:none;color:white;padding:14px 40px;font-family:'Noto Sans JP',sans-serif;font-size:16px;font-weight:900;cursor:pointer;letter-spacing:2px;">もう一度やる</button>
+</div>
+
+<!-- ゲームオーバー画面 -->
+
 <div id="gameover-screen">
   <div class="gameover-title">💀 REJECTED</div>
   <div id="gameover-reason" class="gameover-msg">残念。また出直してこい。</div>
-  <button id="restart-btn" onclick="restartGame()" style="background:#333">もう一度やる</button>
+  <button onclick="restartGame()" style="background:#333;color:white;border:none;padding:14px 40px;font-family:'Noto Sans JP',sans-serif;font-size:16px;font-weight:900;cursor:pointer;letter-spacing:2px;">もう一度やる</button>
 </div>
 
 <script>
@@ -476,7 +594,6 @@ let state = {
 };
 
 // ===== SCENES DATA =====
-// speaker: 'kazuya'|'mirai'|'mizo'|'you'|'narrator'
 const SCENES = [
   // ===== INTRO =====
   {
@@ -489,10 +606,10 @@ const SCENES = [
     id: 'kazuya_intro',
     type: 'dialogue',
     speaker: 'kazuya',
-    speakerName: '瓜田カズヤ',
+    speakerName: '瓜田純士',
     speakerColor: 'red',
     portrait: 'kazuya_img',
-    text: 'おい。お前も面接か？\nまあ見た感じ、オーラあんじゃねーか。\n俺は瓜田カズヤ。ここでたむろしてる。\nお前、ちゃんとやれよ。',
+    text: 'おい。お前も面接か？\nまあ見た感じ、オーラあんじゃねーか。\n俺は瓜田純士。ここでたむろしてる。\nお前、ちゃんとやれよ。',
     next: 'kazuya_choice1'
   },
   {
@@ -504,26 +621,26 @@ const SCENES = [
     portrait: 'you_icon',
     question: '「……」',
     choices: [
-      { text: '「あんた誰ですか？」とシラを切る', delta: {guts:+5, chara:+8, imp:+3}, result: 'kazuya_c1a', notify: '😂 カズヤ、思わず笑った', notifyType: 'good' },
+      { text: '「あんた誰ですか？」とシラを切る', delta: {guts:+5, chara:+8, imp:+3}, result: 'kazuya_c1a', notify: '😂 純士、思わず笑った', notifyType: 'good' },
       { text: '「瓜田さん！俺ずっとファンです！」と飛びつく', delta: {guts:-5, chara:+5, imp:+10}, result: 'kazuya_c1b', notify: '👍 印象アップ！', notifyType: 'good' },
       { text: '「よろしくっす」と素っ気なく返す', delta: {guts:+10, chara:+5, imp:-5}, result: 'kazuya_c1c', notify: '💪 度胸アップ！', notifyType: 'good' },
     ]
   },
   {
     id: 'kazuya_c1a',
-    type: 'dialogue', speaker: 'kazuya', speakerName: '瓜田カズヤ', speakerColor: 'red', portrait: 'kazuya_img',
+    type: 'dialogue', speaker: 'kazuya', speakerName: '瓜田純士', speakerColor: 'red', portrait: 'kazuya_img',
     text: 'はははっ！いいじゃねーか、そのふてぶてしさ。\n面接官に気に入られる前に俺には気に入られたぞ。\nじゃあ行ってこい。',
     next: 'room_enter'
   },
   {
     id: 'kazuya_c1b',
-    type: 'dialogue', speaker: 'kazuya', speakerName: '瓜田カズヤ', speakerColor: 'red', portrait: 'kazuya_img',
+    type: 'dialogue', speaker: 'kazuya', speakerName: '瓜田純士', speakerColor: 'red', portrait: 'kazuya_img',
     text: '「うるせー調子乗んな」\n……まあ悪い気はしねーけどな。\n中で全力でやってこい。',
     next: 'room_enter'
   },
   {
     id: 'kazuya_c1c',
-    type: 'dialogue', speaker: 'kazuya', speakerName: '瓜田カズヤ', speakerColor: 'red', portrait: 'kazuya_img',
+    type: 'dialogue', speaker: 'kazuya', speakerName: '瓜田純士', speakerColor: 'red', portrait: 'kazuya_img',
     text: 'ふっ……肝据わってんじゃねーか。\nそのメンタルで中行ってこい。',
     next: 'room_enter'
   },
@@ -612,6 +729,7 @@ const SCENES = [
       { text: '「フォロワー3万います」（嘘）', delta: {guts:+5, chara:+5, imp:+10}, result: 'mizo_lie', notify: '😅 嘘かどうかバレるかも…', notifyType: 'bad' },
       { text: '「数字より中身で勝負したい」と強がる', delta: {guts:+15, chara:+10, imp:-5}, result: 'mizo_strong', notify: '💥 朝倉が興味深そうな顔をした', notifyType: 'good' },
       { text: '「今から始めます。俺が出れば勝手にバズる」', delta: {guts:+10, chara:+20, imp:+15}, result: 'mizo_hype', notify: '🔥 会場がウケた！キャラ大幅UP', notifyType: 'good' },
+      { text: 'ギャハハと高らかに笑い、突然オニゴヤを熱唱し始める', delta: {guts:+100, chara:+100, imp:+100}, result: 'secret_onigoya', notify: '🎤 ！？！？', notifyType: 'good', secret: true },
     ]
   },
   {
@@ -631,6 +749,38 @@ const SCENES = [
     type: 'dialogue', speaker: 'mirai', speakerName: '朝倉未来', speakerColor: 'gold', portrait: 'mirai_icon',
     text: 'はははっ！気が早えな。\nそのくらいの自信がないとここには来れないけどな。\nじゃあ最後の試練だ。',
     next: 'spar_challenge'
+  },
+
+  // ===== SECRET ROUTE: ONIGOYA =====
+  {
+    id: 'secret_onigoya',
+    type: 'dialogue', speaker: 'you', speakerName: 'あなた。', speakerColor: 'white', portrait: 'you_icon',
+    text: '「ギャハハハハ！！！」\n\n——突然立ち上がり、深呼吸をひとつ。\n\n「♪ オニゴヤ〜〜〜！！オニゴヤ〜〜〜！！♪」',
+    next: 'secret_reaction1'
+  },
+  {
+    id: 'secret_reaction1',
+    type: 'dialogue', speaker: 'mizo', speakerName: '溝口勇児 (COO)', speakerColor: 'gray', portrait: 'mizo_icon',
+    text: '…………\n\nえ。\n\nえ？？',
+    next: 'secret_reaction2'
+  },
+  {
+    id: 'secret_reaction2',
+    type: 'dialogue', speaker: 'mirai', speakerName: '朝倉未来', speakerColor: 'gold', portrait: 'mirai_icon',
+    text: 'ちょ……ちょっと待って。\n\n（笑いをこらえている）\n\nお前いま……オニゴヤ歌った？？',
+    next: 'secret_reaction3'
+  },
+  {
+    id: 'secret_reaction3',
+    type: 'narration',
+    text: '——静寂。\n\n次の瞬間——\n\nひな壇の審査員全員が立ち上がり、踊り出した。\n\n「♪ オニゴヤ〜〜！！♪」\n\n会場が崩壊した。',
+    next: 'secret_mirai_final'
+  },
+  {
+    id: 'secret_mirai_final',
+    type: 'dialogue', speaker: 'mirai', speakerName: '朝倉未来', speakerColor: 'gold', portrait: 'mirai_icon',
+    text: '（号泣）\n\nもう……もう終わり。審査終わり。\n\n試合決定で！！！',
+    next: 'SECRET_CLEAR'
   },
 
   // ===== SPARRING =====
@@ -699,7 +849,6 @@ const SCENES = [
   }
 ];
 
-// Special ending check scene
 const ENDING_PASS = {
   id: 'ending_pass',
   type: 'dialogue', speaker: 'mirai', speakerName: '朝倉未来', speakerColor: 'gold', portrait: 'mirai_icon',
@@ -723,14 +872,15 @@ sceneMap['ending_fail'] = ENDING_FAIL;
 // ===== RENDERING =====
 function getPortrait(id) {
   if (id === 'kazuya_img') {
-    return `<img class="kazuya-img" src="/mnt/user-data/uploads/B759735A-61DE-4494-9697-5E45FCE68C78.png" alt="瓜田カズヤ">`;
+    return `<img class="kazuya-img" src="./B759735A-61DE-4494-9697-5E45FCE68C78.png" alt="瓜田純士" onerror="this.parentElement.innerHTML='🥊'">`;
   }
   const emojis = { mirai_icon: '👊', mizo_icon: '📋', you_icon: '😤', narrator: '📖' };
   return `<span>${emojis[id] || '❓'}</span>`;
 }
 
+let currentNextFn = null;
+
 function renderScene(sceneId) {
-  // Handle special endings
   if (sceneId === 'ending_check') {
     const total = state.guts + state.chara + state.imp;
     sceneId = total >= 300 ? 'ending_pass' : 'ending_fail';
@@ -739,14 +889,17 @@ function renderScene(sceneId) {
   const scene = sceneMap[sceneId];
   if (!scene) return;
 
-  // Update stage label & progress
   if (scene.stageLabel) document.getElementById('stage-label').textContent = scene.stageLabel;
   if (scene.stageProgress !== undefined) document.getElementById('progress-fill').style.width = scene.stageProgress + '%';
 
   const container = document.getElementById('scene-container');
   container.innerHTML = '';
   document.getElementById('choices').innerHTML = '';
-  document.getElementById('next-btn').style.display = 'none';
+  const nextBtn = document.getElementById('next-btn');
+  nextBtn.style.display = 'none';
+  currentNextFn = null;
+
+  if (typeInterval) { clearInterval(typeInterval); typeInterval = null; }
 
   if (scene.type === 'narration') {
     const box = document.createElement('div');
@@ -757,9 +910,11 @@ function renderScene(sceneId) {
     `;
     container.appendChild(box);
     typeText(scene.text, 'typewriter-text', () => {
-      document.getElementById('next-btn').style.display = 'inline-block';
-      document.getElementById('next-btn').onclick = () => renderScene(scene.next);
+      nextBtn.style.display = 'inline-block';
+      currentNextFn = () => renderScene(scene.next);
+      nextBtn.onclick = currentNextFn;
     });
+
   } else if (scene.type === 'dialogue') {
     const box = document.createElement('div');
     box.className = 'scene-box';
@@ -781,11 +936,15 @@ function renderScene(sceneId) {
         setTimeout(() => showClear(), 500);
       } else if (scene.next === 'GAMEOVER') {
         setTimeout(() => showGameOver(), 500);
+      } else if (scene.next === 'SECRET_CLEAR') {
+        setTimeout(() => showSecretClear(), 500);
       } else {
-        document.getElementById('next-btn').style.display = 'inline-block';
-        document.getElementById('next-btn').onclick = () => renderScene(scene.next);
+        nextBtn.style.display = 'inline-block';
+        currentNextFn = () => renderScene(scene.next);
+        nextBtn.onclick = currentNextFn;
       }
     });
+
   } else if (scene.type === 'choice') {
     const box = document.createElement('div');
     box.className = 'scene-box';
@@ -806,7 +965,7 @@ function renderScene(sceneId) {
     const choicesDiv = document.getElementById('choices');
     scene.choices.forEach((c, i) => {
       const btn = document.createElement('button');
-      btn.className = 'choice-btn';
+      btn.className = 'choice-btn' + (c.secret ? ' secret' : '');
       btn.innerHTML = `<span class="choice-num">${i+1}.</span>${c.text}`;
       btn.onclick = () => selectChoice(c);
       choicesDiv.appendChild(btn);
@@ -815,86 +974,102 @@ function renderScene(sceneId) {
 }
 
 function selectChoice(choice) {
-  // Apply delta
   if (choice.delta) {
-    state.guts = Math.min(100, Math.max(0, state.guts + (choice.delta.guts || 0)));
+    state.guts  = Math.min(100, Math.max(0, state.guts  + (choice.delta.guts  || 0)));
     state.chara = Math.min(100, Math.max(0, state.chara + (choice.delta.chara || 0)));
-    state.imp = Math.min(100, Math.max(0, state.imp + (choice.delta.imp || 0)));
+    state.imp   = Math.min(100, Math.max(0, state.imp   + (choice.delta.imp   || 0)));
     updateStats();
   }
-  // Show notification
   if (choice.notify) showNotification(choice.notify, choice.notifyType);
-  // Go to result scene
   renderScene(choice.result);
 }
 
 function updateStats() {
-  document.getElementById('bar-guts').style.width = state.guts + '%';
+  document.getElementById('bar-guts').style.width  = state.guts  + '%';
   document.getElementById('bar-chara').style.width = state.chara + '%';
-  document.getElementById('bar-imp').style.width = state.imp + '%';
-  document.getElementById('val-guts').textContent = state.guts;
+  document.getElementById('bar-imp').style.width   = state.imp   + '%';
+  document.getElementById('val-guts').textContent  = state.guts;
   document.getElementById('val-chara').textContent = state.chara;
-  document.getElementById('val-imp').textContent = state.imp;
+  document.getElementById('val-imp').textContent   = state.imp;
 }
 
 function showNotification(msg, type) {
   const el = document.getElementById('notification');
   el.textContent = msg;
   el.className = 'show ' + (type || '');
-  setTimeout(() => el.className = '', 2500);
+  setTimeout(() => { el.className = ''; }, 2500);
 }
 
 let typeInterval = null;
 function typeText(text, targetId, callback) {
   const el = document.getElementById(targetId);
   if (!el) return;
-  const lines = text.split('\n');
-  let html = '';
-  let charIndex = 0;
+
+  if (typeInterval) { clearInterval(typeInterval); typeInterval = null; }
+
   const allChars = text.split('');
-
-  if (typeInterval) clearInterval(typeInterval);
-
-  el.innerHTML = '';
   let current = '';
+  let charIndex = 0;
+
+  // Store full text for skip
+  el._fullText = text;
+  el._callback = callback;
+
+  const cursor = document.getElementById('typewriter-cursor');
+  if (cursor) cursor.style.display = 'inline-block';
 
   typeInterval = setInterval(() => {
     if (charIndex >= allChars.length) {
       clearInterval(typeInterval);
-      const cursor = document.getElementById('typewriter-cursor');
+      typeInterval = null;
       if (cursor) cursor.style.display = 'none';
       if (callback) callback();
       return;
     }
     const ch = allChars[charIndex];
-    if (ch === '\n') current += '<br>';
-    else current += ch;
+    current += ch === '\n' ? '<br>' : ch;
     el.innerHTML = current;
     charIndex++;
-  }, 30);
+  }, 28);
 }
 
-// Click to skip typewriter
-document.getElementById('scene-container').addEventListener('click', () => {
-  if (typeInterval) {
-    clearInterval(typeInterval);
-    // Force complete
-    const el = document.getElementById('typewriter-text');
-    if (el) {
-      const currentScene = getCurrentNarrScene();
-      // Just trigger done
-    }
+function skipTypewriter() {
+  if (!typeInterval) return;
+  clearInterval(typeInterval);
+  typeInterval = null;
+
+  const el = document.getElementById('typewriter-text');
+  if (el && el._fullText) {
+    el.innerHTML = el._fullText.split('\n').join('<br>');
   }
-});
+  const cursor = document.getElementById('typewriter-cursor');
+  if (cursor) cursor.style.display = 'none';
+
+  if (el && el._callback) {
+    const cb = el._callback;
+    el._callback = null;
+    cb();
+  }
+}
+
+// Click anywhere on scene to skip typewriter
+document.getElementById('scene-container').addEventListener('click', skipTypewriter);
 
 function showClear() {
   document.getElementById('progress-fill').style.width = '100%';
   document.getElementById('clear-screen').classList.add('show');
-  spawnConfetti();
+  spawnConfetti(['#e8001a', '#f5c518', '#ffffff', '#ff6600']);
+}
+
+function showSecretClear() {
+  document.getElementById('progress-fill').style.width = '100%';
+  document.getElementById('secret-screen').classList.add('show');
+  spawnConfetti(['#ff00ff', '#f5c518', '#ffffff', '#00ffff', '#ff6600']);
+  // Extra burst
+  setTimeout(() => spawnConfetti(['#ff00ff', '#ffffff', '#f5c518'], 80), 600);
 }
 
 function showGameOver() {
-  const total = state.guts + state.chara + state.imp;
   let reason = '印象が足りなかった。もっと自分を出せ。';
   if (state.guts < 50) reason = '度胸が足りない。もっとガツガツこい。';
   else if (state.chara < 50) reason = 'キャラが薄い。個性を出せ。';
@@ -902,9 +1077,9 @@ function showGameOver() {
   document.getElementById('gameover-screen').classList.add('show');
 }
 
-function spawnConfetti() {
-  const colors = ['#e8001a', '#f5c518', '#ffffff', '#ff6600'];
-  for (let i = 0; i < 60; i++) {
+function spawnConfetti(colors, count) {
+  count = count || 60;
+  for (let i = 0; i < count; i++) {
     setTimeout(() => {
       const piece = document.createElement('div');
       piece.className = 'confetti-piece';
@@ -913,14 +1088,16 @@ function spawnConfetti() {
         top: -10px;
         background: ${colors[Math.floor(Math.random()*colors.length)]};
         animation-duration: ${1.5+Math.random()*2}s;
-        animation-delay: ${Math.random()*1}s;
+        animation-delay: ${Math.random()*0.8}s;
         width: ${6+Math.random()*8}px;
         height: ${6+Math.random()*8}px;
         border-radius: ${Math.random()>0.5?'50%':'0'};
+        position: fixed;
+        z-index: 998;
       `;
       document.body.appendChild(piece);
       setTimeout(() => piece.remove(), 4000);
-    }, i * 30);
+    }, i * 25);
   }
 }
 
@@ -929,6 +1106,7 @@ function restartGame() {
   updateStats();
   document.getElementById('clear-screen').classList.remove('show');
   document.getElementById('gameover-screen').classList.remove('show');
+  document.getElementById('secret-screen').classList.remove('show');
   document.getElementById('stage-label').textContent = '第１関門';
   document.getElementById('progress-fill').style.width = '0%';
   renderScene('intro');
@@ -939,4 +1117,4 @@ renderScene('intro');
 </script>
 
 </body>
-</html>
+</html></html>
