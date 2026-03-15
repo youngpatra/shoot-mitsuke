@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ALBIREX NIIGATA 2026 — 選手名鑑</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Noto+Sans+JP:wght@300;400;700;900&family=Anton&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --orange: #F05A1A;
+    --navy: #0A1628;
+    --sky: #1A9FD4;
+    --cream: #F8F4EE;
+    --dark: #060D1A;
+    --light-gray: #E8EDF5;
+    --mid: #6B7A99;
+  }
+
+- { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+background: var(–dark);
+color: var(–cream);
+font-family: ‘Noto Sans JP’, sans-serif;
+min-height: 100vh;
+overflow-x: hidden;
+}
+
+/* HERO */
+.hero {
+position: relative;
+background: var(–navy);
+padding: 60px 0 40px;
+overflow: hidden;
+border-bottom: 4px solid var(–orange);
+}
+
+.hero::before {
+content: ‘’;
+position: absolute;
+inset: 0;
+background:
+repeating-linear-gradient(
+-45deg,
+transparent,
+transparent 30px,
+rgba(240,90,26,0.04) 30px,
+rgba(240,90,26,0.04) 31px
+);
+}
+
+.hero-inner {
+max-width: 1200px;
+margin: 0 auto;
+padding: 0 24px;
+position: relative;
+z-index: 1;
+}
+
+.hero-badge {
+display: inline-block;
+background: var(–orange);
+color: #fff;
+font-family: ‘Oswald’, sans-serif;
+font-size: 12px;
+letter-spacing: 3px;
+padding: 4px 14px;
+margin-bottom: 16px;
+text-transform: uppercase;
+}
+
+.hero h1 {
+font-family: ‘Anton’, sans-serif;
+font-size: clamp(52px, 10vw, 120px);
+line-height: 0.9;
+color: var(–cream);
+letter-spacing: -2px;
+}
+
+.hero h1 span {
+color: var(–orange);
+}
+
+.hero-sub {
+font-family: ‘Oswald’, sans-serif;
+font-size: 22px;
+color: var(–sky);
+letter-spacing: 6px;
+margin-top: 12px;
+}
+
+.hero-meta {
+margin-top: 24px;
+display: flex;
+gap: 32px;
+flex-wrap: wrap;
+}
+
+.hero-stat {
+font-size: 12px;
+color: var(–mid);
+letter-spacing: 1px;
+text-transform: uppercase;
+}
+
+.hero-stat strong {
+display: block;
+font-size: 20px;
+color: var(–cream);
+font-family: ‘Oswald’, sans-serif;
+font-weight: 600;
+}
+
+/* FILTER BAR */
+.filter-bar {
+background: var(–navy);
+padding: 16px 24px;
+display: flex;
+gap: 8px;
+flex-wrap: wrap;
+max-width: 1200px;
+margin: 0 auto;
+position: sticky;
+top: 0;
+z-index: 100;
+border-bottom: 1px solid rgba(240,90,26,0.2);
+}
+
+.filter-btn {
+font-family: ‘Oswald’, sans-serif;
+font-size: 13px;
+letter-spacing: 2px;
+padding: 8px 20px;
+border: 1px solid rgba(255,255,255,0.15);
+background: transparent;
+color: var(–mid);
+cursor: pointer;
+transition: all 0.2s;
+text-transform: uppercase;
+}
+
+.filter-btn:hover, .filter-btn.active {
+background: var(–orange);
+border-color: var(–orange);
+color: #fff;
+}
+
+/* SECTION */
+.section {
+max-width: 1200px;
+margin: 0 auto;
+padding: 48px 24px 24px;
+}
+
+.section-title {
+font-family: ‘Oswald’, sans-serif;
+font-size: 13px;
+letter-spacing: 4px;
+color: var(–orange);
+text-transform: uppercase;
+margin-bottom: 24px;
+display: flex;
+align-items: center;
+gap: 12px;
+}
+
+.section-title::after {
+content: ‘’;
+flex: 1;
+height: 1px;
+background: rgba(240,90,26,0.3);
+}
+
+/* GRID */
+.players-grid {
+display: grid;
+grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+gap: 2px;
+background: rgba(255,255,255,0.03);
+}
+
+/* CARD */
+.card {
+background: var(–navy);
+padding: 0;
+cursor: default;
+transition: transform 0.2s, box-shadow 0.2s;
+position: relative;
+overflow: hidden;
+animation: fadeUp 0.5s ease both;
+}
+
+@keyframes fadeUp {
+from { opacity: 0; transform: translateY(20px); }
+to   { opacity: 1; transform: translateY(0); }
+}
+
+.card:hover {
+transform: translateY(-4px);
+box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+z-index: 2;
+}
+
+.card.hidden { display: none; }
+
+.card-header {
+padding: 20px 20px 0;
+display: flex;
+align-items: flex-start;
+gap: 16px;
+}
+
+.card-number {
+font-family: ‘Anton’, sans-serif;
+font-size: 52px;
+line-height: 1;
+color: rgba(255,255,255,0.08);
+min-width: 60px;
+text-align: right;
+position: relative;
+top: -4px;
+}
+
+.card-pos-block {
+display: flex;
+flex-direction: column;
+gap: 4px;
+}
+
+.card-pos {
+font-family: ‘Oswald’, sans-serif;
+font-size: 10px;
+letter-spacing: 2px;
+color: var(–sky);
+text-transform: uppercase;
+background: rgba(26,159,212,0.12);
+padding: 2px 8px;
+display: inline-block;
+width: fit-content;
+}
+
+.card-pos.gk { color: #FFCC00; background: rgba(255,204,0,0.1); }
+.card-pos.df { color: #4FC3F7; background: rgba(79,195,247,0.1); }
+.card-pos.mf { color: #81C784; background: rgba(129,199,132,0.1); }
+.card-pos.fw { color: #FF7043; background: rgba(255,112,67,0.1); }
+
+.card-new {
+font-family: ‘Oswald’, sans-serif;
+font-size: 9px;
+letter-spacing: 1px;
+color: var(–orange);
+background: rgba(240,90,26,0.1);
+border: 1px solid rgba(240,90,26,0.3);
+padding: 1px 6px;
+display: inline-block;
+width: fit-content;
+}
+
+.card-body {
+padding: 12px 20px 20px;
+}
+
+.card-name {
+font-family: ‘Noto Sans JP’, sans-serif;
+font-weight: 900;
+font-size: 20px;
+color: var(–cream);
+line-height: 1.2;
+margin-bottom: 4px;
+}
+
+.card-name-en {
+font-family: ‘Oswald’, sans-serif;
+font-size: 11px;
+color: var(–mid);
+letter-spacing: 1px;
+margin-bottom: 14px;
+}
+
+.card-info {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 10px 16px;
+margin-bottom: 14px;
+}
+
+.info-item {
+font-size: 11px;
+}
+
+.info-label {
+color: var(–mid);
+font-size: 9px;
+letter-spacing: 1px;
+text-transform: uppercase;
+margin-bottom: 2px;
+}
+
+.info-value {
+color: var(–cream);
+font-weight: 400;
+}
+
+.card-quote {
+background: rgba(240,90,26,0.07);
+border-left: 3px solid var(–orange);
+padding: 10px 12px;
+font-size: 12px;
+color: #B0BCC8;
+line-height: 1.7;
+font-style: italic;
+}
+
+.card-quote::before {
+content: ’💬 ’;
+font-style: normal;
+font-size: 11px;
+}
+
+/* FOOTER */
+footer {
+text-align: center;
+padding: 48px 24px;
+color: var(–mid);
+font-size: 12px;
+border-top: 1px solid rgba(255,255,255,0.05);
+margin-top: 48px;
+}
+
+footer strong { color: var(–orange); }
+
+/* SCROLL ANIMATION DELAYS */
+.card:nth-child(1)  { animation-delay: 0.02s; }
+.card:nth-child(2)  { animation-delay: 0.04s; }
+.card:nth-child(3)  { animation-delay: 0.06s; }
+.card:nth-child(4)  { animation-delay: 0.08s; }
+.card:nth-child(5)  { animation-delay: 0.10s; }
+.card:nth-child(6)  { animation-delay: 0.12s; }
+.card:nth-child(7)  { animation-delay: 0.14s; }
+.card:nth-child(8)  { animation-delay: 0.16s; }
+.card:nth-child(9)  { animation-delay: 0.18s; }
+.card:nth-child(10) { animation-delay: 0.20s; }
+.card:nth-child(11) { animation-delay: 0.22s; }
+.card:nth-child(12) { animation-delay: 0.24s; }
+.card:nth-child(n+13) { animation-delay: 0.26s; }
+
+@media (max-width: 600px) {
+.players-grid { grid-template-columns: 1fr; }
+.hero h1 { font-size: 52px; }
+}
+</style>
+
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">2026 Official Roster</div>
+    <h1>ALBIREX<br><span>NIIGATA</span></h1>
+    <div class="hero-sub">選手名鑑 — J2 SEASON</div>
+    <div class="hero-meta">
+      <div class="hero-stat"><strong>31</strong>選手登録</div>
+      <div class="hero-stat"><strong>J2</strong>2026シーズン</div>
+      <div class="hero-stat"><strong>船越 優蔵</strong>監督</div>
+    </div>
+  </div>
+</div>
+
+<div style="background: var(--dark); padding: 0 0 4px;">
+  <div class="filter-bar">
+    <button class="filter-btn active" onclick="filter('ALL')">ALL</button>
+    <button class="filter-btn" onclick="filter('GK')">GK</button>
+    <button class="filter-btn" onclick="filter('DF')">DF</button>
+    <button class="filter-btn" onclick="filter('MF')">MF</button>
+    <button class="filter-btn" onclick="filter('FW')">FW</button>
+    <button class="filter-btn" onclick="filter('新加入')">🆕 新加入</button>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">SQUAD PROFILES</div>
+  <div class="players-grid" id="grid">
+
+```
+<!-- GK -->
+<div class="card" data-pos="GK">
+  <div class="card-header">
+    <div class="card-number">21</div>
+    <div class="card-pos-block"><span class="card-pos gk">GK</span></div>
+  </div>
+  <div class="card-body">
+    <div class="card-name">田代 琉我</div>
+    <div class="card-name-en">TASHIRO Ryuga</div>
+    <div class="card-info">
+      <div class="info-item"><div class="info-label">年齢</div><div class="info-value">27歳</div></div>
+      <div class="info-item"><div class="info-label">出身地</div><div class="info-value">神奈川県</div></div>
+      <div class="info-item"><div class="info-label">前所属</div><div class="info-value">ロアッソ熊本</div></div>
+      <div class="info-item"><div class="info-label">ポジション</div><div class="info-value">ゴールキーパー</div></div>
+    </div>
+    <div class="card-quote">神奈川から熊本を経て、ついに白鳥の国へ。ゴールマウスの番人として雪国に根を張る覚悟が見える。</div>
+  </div>
+</div>
+
+<div class="card" data-pos="GK">
+  <div class="card-header">
+    <div class="card-number">23</div>
+    <div class="card-pos-block"><span class="card-pos gk">GK</span></div>
+  </div>
+  <div class="card-body">
+    <div class="card-name">吉満 大介</div>
+    <div class="card-name-en">YOSHIMITSU Daisuke</div>
+    <div class="card-info">
+      <div class="info-item"><div class="info-label">年齢</div><div class="info-value">33歳</div></div>
+      <div class="info-item"><div class="info-label">出身地</div><div class="info-value">鹿児島県</div></div>
+      <div class="info-item"><div class="info-label">前所属</div><div class="info-value">レノファ山口</div></div>
+      <div class="info-item"><div class="info-label">ポジション</div><div class="info-value">ゴールキーパー</div></div>
+    </div>
+    <div class="card-quote">33歳のベテランGK。鹿児島出身のサツマイモパワーで、チームの精神的支柱として立ちはだかる。</div>
+  </div>
+</div>
+
+<div class="card" data-pos="GK" data-tag="新加入">
+  <div class="card-header">
+    <div class="card-number">64</div>
+    <div class="card-pos-block"><span class="card-pos gk">GK</span><span class="card-new">新加入</span></div>
+  </div>
+  <div class="card-body">
+    <div class="card-name">ノアム・バウマン</div>
+    <div class="card-name-en">NOAM BAUMANN</div>
+    <div class="card-info">
+      <div class="info-item"><div class="info-label">年齢</div><div class="info-value">29歳</div></div>
+      <div class="info-item"><div class="info-label">出身地</div><div class="info-value">ドミニカ共和国</div></div>
+      <div class="info-item"><div class="info-label">前所属</div><div class="info-value">SC相模原</div></div>
+      <div class="info-item"><div class="info-label">ポジション</div><div class="info-value">ゴールキーパー</div></div>
+    </div>
+    <div class="card-quote">カリブ海育ちのGKが日本の雪に挑む。背番号64の異色の存在が開幕から正GKの座を奪取した。</div>
+  </div>
+</div>
+
+<div class="card" data-pos="GK">
+  <div class="card-header">
+    <div class="card-number">71</div>
+    <div class="card-pos-block"><span class="card-pos gk">GK</span></div>
+  </div>
+  <div class="card-body">
+    <div class="card-name">内山 翔太</div>
+    <div class="card-name-en">UCHIYAMA Shota</div>
+    <div class="card-info">
+      <div class="info-item"><div class="info-label">div</div><div class="info-value">19歳</div></div>
+      <div class="info-item"><div class="info-label">出身地</div><div class="info-value">新潟県</div></div>
+      <div class="info-item"><div class="info-label">前所属</div><div class="info-value">アルビユース</div></div>
+      <div class="info-item"><div class="info-label">ポジション</div><div class="info-value">ゴールキーパー</div></div>
+    </div>
+    <div class="card-quote">生粋の新潟っ子。アルビのユースから昇格した19歳。地元の夢を背負って、未来の正GKを目指す。</div>
+  </div>
+</div>
+
+<!-- DF -->
+<div class="card" data-pos="DF">
+  <div class="card-header">
+    <div class="card-number">2</div>
+    <div class="card-pos-block"><span class="card-pos df">DF</span></div>
+  </div>
+  <div class="card-body">
+    <div class="card-name">ジェイソン・ゲリア</div>
+    <div class="card-name-en">JASON GERIA</div>
+    <div class="card-info">
+      <div class="info-item"><div class="info-label">年齢</div><div class="info-value">32歳</div></div>
+      <div class="info-item"><div class="info-label">出身地</div><div class="info-value">オーストラリア</div></div>
+      <div class="info-item"><div class="info-label">前所属</div><div class="info-value">メルボルン・ビクトリー</div></div>
+      <div class="info-item"><div class="info-label">ポジション</div><div class="info-value">ディフェンダー</div></div>
+    </div>
+    <div class="card-quote">豪州代表経験を持つベテラン右SB。カンガルーの国から信濃川のほとりにやって来た頼れる守護者。</div>
+  </div>
+</div>
+
+<div class="card" data-pos="DF" data-tag="新加入">
+  <div class="card-header">
+    <div class="card-number">3</div>
+    <div class="card-pos-block"><span class="card-pos df">DF</span><span class="card-new">新加入</span></div>
+  </div>
+  <div class="card-body">
+    <div class="card-name">加藤 徹也</div>
+    <div class="card-name-en">KATO Tetsuya</div>
+    <div class="card-info">
+      <div class="info-item"><div class="info-label">年齢</div><div class="info-value">30歳</div></div>
+      <div class="info-item"><div class="info-label">出身地</div><div class="info-value">福島県</div></div>
+      <div class="info-item"><div class="info-label">前所属</div><div class="info-value">FC今治</div></div>
+      <div class="info-item"><div class="info-label">ポジション</div><div class="info-value">ディフェンダー</div></div>
+    </div>
+    <div class="card-quote">福島の鉄人・加藤が今治経由で新潟へ。名前に「徹（てつ）」が入るだけあって守備は鉄板。</div>
+  </div>
+</div>
+
+<div class="card" data-pos="DF">
+  <div class="card-header">
+    <div class="card-number">5</div>
+    <div class="card-pos-block"><span class="card-pos df">DF</span></div>
+  </div>
+  <div class="card-body">
+    <div class="card-name">舞行龍 ジェームズ</div>
+    <div class="card-name-en">MAIKORUJON James</div>
+    <div class="card-info">
+      <div class="info-item"><div class="info-label">年齢</div><div class="info-value">37歳</div></div>
+      <div class="info-item"><div class="info-label">出身地</div><div class="info-value">ニュージーランド</div></div>
+      <div class="info-item"><div class="info-label">前所属</div><div class="info-value">川崎フロンターレ</div></div>
+      <div class="info-item"><div class="info-label">ポジション</div><div class="info-value">ディフェンダー</div></div>
+    </div>
+    <div class="card-quote">37歳！！アルビの生きるレジェンド。NZのオールブラックス魂でタックルを続ける不死身のDFがまた帰ってきた。</div>
+  </div>
+</div>
+
+<div class="card" data-pos="DF">
+  <div class="card-header">
+    <div class="card-number">15</div>
+    <div class="card-pos-block"><span class="card-pos df">DF</span></div>
+  </div>
+  <div class="card-body">
+    <div class="card-name">早川 史哉</div>
+    <div class="card-name-en">HAYAKAWA Fumiya</div>
+    <div class="card-info">
+      <div class="info-item"><div class="info-label">年齢</div><div class="info-value">32歳</div></div>
+      <div class="info-item"><div class="info-label">出身地</div><div class="info-value">新潟県</div></div>
+      <div class="info-item"><div class="info-label">前所属</div><div class="info-value">筑波大</div></div>
+      <div class="info-item"><div class="info-label">ポジション</div><div class="info-value">ディフェンダー</div></div>
+    </div>
+    <div class="card-quote">地元・新潟出身の生え抜きDFが筑波大経由で帰郷。「史哉」の名の通り、歴史を刻む守備を魅せる。</div>
+  </div>
+</div>
+
+<div class="card" data-pos="DF" data-tag="復帰">
+  <div class="card-header">
+    <div class="card-number">24</div>
+    <div class="card-pos-block"><span class="card-pos df">DF</span><span class="card-new" style="color:#4FC3F7;border-color:rgba(79,195,247,0.4);background:rgba(79,195,247,0.08);">復帰</span></div>
+  </div>
+  <div class="card-body">
+    <div class="card-name">森 璃太</div>
+    <div class="card-name-en">MORI Rita</div>
+    <div class="card-info">
+      <div class="info-item"><div class="info-label">年齢</div><div class="info-value">24歳</div></div>
+      <div class="info-item"><div class="info-label">出身地</div><div class="info-value">神奈川県</div></div>
+      <div class="info-item"><div class="info-label">前所属</div><div class="info-value">栃木SC</div></div>
+      <div class="info-item"><div class="info-label">ポジション</div><div class="info-value">ディフェンダー</div></div>
+    </div>
+    <div class="card-quote">栃木での武者修行を終えてアルビに帰還。24歳の若武者が「璃太」輝く左SBとして成長して戻ってきた。</div>
+  </div>
+</div>
+
+<div class="card" data-pos="DF" data-tag="新加入">
+  <div class="card-header">
+    <div class="card-number">26</div>
+    <div class="card-pos-block"><span class="card-pos df">DF</span><span class="card-new">新加入</span></div>
+  </div>
+  <div class="card-body">
+    <div class="card-name">佐藤 海宏</div>
+    <div class="card-name-en">SATO Umihiro</div>
+    <div class="card-info">
+      <div class="info-item"><div class="info-label">年齢</div><div class="info-value">19歳</div></div>
+      <div class="info-item"><div class="info-label">出身地</div><div class="info-value">茨城県</div></div>
+      <div class="info-item"><div class="info-label">前所属</div><div class="info-value">鹿島アントラーズ</div></div>
+      <div class="info-item"><div class="info-label">ポジション</div><div class="info-value">ディフェンダー</div></div>
+    </div>
+    <div class="card-quote">名前は「海宏」なのに茨城出身。鹿島の英才教育を受けた19歳が新潟の海へ飛び込んだ。</div>
+  </div>
+</div>
+
+<div class="card" data-pos="DF" data-tag="新加入">
+  <div class="card-header">
+    <div class="card-number">33</div>
+    <div class="card-pos-block"><span class="card-pos df">DF</span><span class="card-new">新加入</span></div>
+  </div>
+  <div class="card-body">
+    <div class="card-name">松岡 敏也</div>
+    <div class="card-name-en">MATSUOKA Toshiya</div>
+    <div class="card-info">
+      <div class="info-item"><div class="info-label">年齢</div><div class="info-value">18歳</div></div>
+      <div class="info-item"><div class="info-label">出身地</div><div class="info-value">福岡県</div></div>
+      <div class="info-item"><div class="info-label">前所属</div><div class="info-value">興國高校</div></div>
+      <div class="info-item"><div class="info-label">ポジション</div><div class="info-value">ディフェンダー</div></div>
+    </div>
+    <div class="card-quote">高校卒業してすぐプロ入りの超新星。「敏」の字のごとくフットワーク軽やかな18歳。福岡のサッカー王国出身。</div>
+  </div>
+</div>
+
+<div class="card" data-pos="DF" data-tag="新加入">
+  <div class="card-header">
+    <div class="card-number">34</div>
+    <div class="card-pos-block"><span class="card-pos df">DF</span><span class="card-new">新加入</span></div>
+  </div>
+  <div class="card-body">
+    <div class="card-name">藤原 優大</div>
+    <div class="card-name-en">FUJIWARA Yudai</div>
+    <div class="card-info">
+      <div class="info-item"><div class="info-label">年齢</div><div class="info-value">23歳</div></div>
+      <div class="info-item"><div class="info-label">出身地</div><div class="info-value">青森県</div></div>
+      <div class="info-item"><div class="info-label">前所属</div><div class="info-value">浦和レッズ</div></div>
+      <div class="info-item"><div class="info-label">ポジション</div><div class="info-value">ディフェンダー</div></div>
+    </div>
+    <div class="card-quote">浦和育ちの北東北男児。青森の芯の強さと浦和の気概を携えて、新潟の最終ラインに君臨する。</div>
+  </div>
+</div>
+
+<div class="card" data-pos="DF">
+  <div class="card-header">
+    <div class="card-number">38</div>
+    <div class="card-pos-block"><span class="card-pos df">DF</span></div>
+  </div>
+  <div class="card-body">
+    <div class="card-name">森 昂大</div>
+    <div class="card-name-en">MORI Kodai</div>
+    <div class="card-info">
+      <div class="info-item"><div class="info-label">年齢</div><div class="info-value">26歳</div></div>
+      <div class="info-item"><div class="info-label">出身地</div><div class="info-value">長野県</div></div>
+      <div class="info-item"><div class="info-label">前所属</div><div class="info-value">徳島ヴォルティス</div></div>
+      <div class="info-item"><div class="info-label">ポジション</div><div class="info-value">ディフェンダー</div></div>
+    </div>
+    <div class="card-quote">信州・長野出身の山の男が日本海の地へ。徳島でのボールポゼッションサッカーの経験を新潟に持ち込む。</div>
+  </div>
+</div>
+
+<div class="card" data-pos="DF">
+  <div class="card-header">
+    <div class="card-number">77</div>
+    <div class="card-pos-block"><span class="card-pos df">DF</span></div>
+  </div>
+  <div class="card-body">
+    <div class="card-name">舩木 翔</div>
+    <div class="card-name-en">FUNAKI Sho</div>
+    <div class="card-info">
+      <div class="info-item"><div class="info-label">年齢</div><div class="info-value">27歳</div></div>
+      <div class="info-item"><div class="info-label">出身地</div><div class="info-value">奈良県</div></div>
+      <div class="info-item"><div class="info-label">前所属</div><div class="info-value">セレッソ大阪</div></div>
+      <div class="info-item"><div class="info-label">ポジション</div><div class="info-value">ディフェンダー</div></div>
+    </div>
+    <div class="card-quote">鹿の都・奈良出身。セレッソで磨いた攻撃的なSBスタイルで、アルビの攻撃に幅をもたらす。</div>
+  </div>
+</div>
+
+<!-- MF -->
+<div class="card" data-pos="MF" data-tag="新加入">
+  <div class="card-header">
+    <div class="card-number">7</div>
+    <div class="card-pos-block"><span class="card-pos mf">MF</span><span class="card-new">新加入</span></div>
+  </div>
+  <div class="card-body">
+    <div class="card-name">大西 悠介</div>
+    <div class="card-name-en">ONISHI Yusuke</div>
+    <div class="card-info">
+      <div class="info-item"><div class="info-label">年齢</div><div class="info-value">24歳</div></div>
+      <div class="info-item"><div class="info-label">出身地</div><div class="info-value">茨城県</div></div>
+      <div class="info-item"><div class="info-label">前所属</div><div class="info-value">いわきFC</div></div>
+      <div class="info-item"><div class="info-label">ポジション</div><div class="info-value">ミッドフィルダー</div></div>
+    </div>
+    <div class="card-quote">いわきの強度サッカーで鍛えられた茨城男。フィジカル全振りのいわきスタイルで中盤を制圧する。</div>
+  </div>
+</div>
+
+<div class="card" data-pos="MF">
+  <div class="card-header">
+    <div class="card-number">8</div>
+    <div class="card-pos-block"><span class="card-pos mf">MF</span></div>
+  </div>
+  <div class="card-body">
+    <div class="card-name">白井 永地</div>
+    <div class="card-name-en">SHIRAI Eichi</div>
+    <div class="card-info">
+      <div class="info-item"><div class="info-label">年齢</div><div class="info-value">30歳</div></div>
+      <div class="info-item"><div class="info-label">出身地</div><div class="info-value">千葉県</div></div>
+      <div class="info-item"><div class="info-label">前所属</div><div class="info-value">柏レイソル</div></div>
+      <div class="info-item"><div class="info-label">ポジション</div><div class="info-value">ミッドフィルダー</div></div>
+    </div>
+    <div class="card-quote">柏の黄色い魂を持ちつつオレンジに染まった知将MF。「永地」の名のごとく、ピッチに永遠に刻む技術がある。</div>
+  </div>
+</div>
+
+<div class="card" data-pos="MF">
+  <div class="card-header">
+    <div class="card-number">11</div>
+    <div class="card-pos-block"><span class="card-pos mf">MF</span></div>
+  </div>
+  <div class="card-body">
+    <div class="card-name">ダニーロ・ゴメス</div>
+    <div class="card-name-en">DANILO GOMES</div>
+    <div class="card-info">
+      <div class="info-item"><div class="info-label">年齢</div><div class="info-value">27歳</div></div>
+      <div class="info-item"><div class="info-label">出身地</div><div class="info-value">ブラジル</div></div>
+      <div class="info-item"><div class="info-label">前所属</div><div class="info-value">ポンチ・プレッタ</div></div>
+      <div class="info-item"><div class="info-label">ポジション</div><div class="info-value">ミッドフィルダー</div></div>
+    </div>
+    <div class="card-quote">ブラジルの情熱を日本海に持ち込んだ司令塔。ポンチ・プレッタって何？と聞いたら「黒いブリッジ」と返ってきた。</div>
+  </div>
+</div>
+
+<div class="card" data-pos="MF" data-tag="復帰">
+  <div class="card-header">
+    <div class="card-number">13</div>
+    <div class="card-pos-block"><span class="card-pos mf">MF</span><span class="card-new" style="color:#4FC3F7;border-color:rgba(79,195,247,0.4);background:rgba(79,195,247,0.08);">復帰</span></div>
+  </div>
+  <div class="card-body">
+    <div class="card-name">落合 陸</div>
+    <div class="card-name-en">OCHIAI Riku</div>
+    <div class="card-info">
+      <div class="info-item"><div class="info-label">年齢</div><div class="info-value">26歳</div></div>
+      <div class="info-item"><div class="info-label">出身地</div><div class="info-value">埼玉県</div></div>
+      <div class="info-item"><div class="info-label">前所属</div><div class="info-value">大分トリニータ</div></div>
+      <div class="info-item"><div class="info-label">ポジション</div><div class="info-value">ミッドフィルダー</div></div>
+    </div>
+    <div class="card-quote">大分で修行を積んで新潟に帰還。名前の「陸」のように広大なカバーエリアで中盤を支配する復帰戦士。</div>
+  </div>
+</div>
+
+<div class="card" data-pos="MF" data-tag="新加入">
+  <div class="card-header">
+    <div class="card-number">14</div>
+    <div class="card-pos-block"><span class="card-pos mf">MF</span><span class="card-new">新加入</span></div>
+  </div>
+  <div class="card-body">
+    <div class="card-name">古長谷 千博</div>
+    <div class="card-name-en">KONAGAYA Kazuhiro</div>
+    <div class="card-info">
+      <div class="info-item"><div class="info-label">年齢</div><div class="info-value">24歳</div></div>
+      <div class="info-item"><div class="info-label">出身地</div><div class="info-value">静岡県</div></div>
+      <div class="info-item"><div class="info-label">前所属</div><div class="info-value">ロアッソ熊本</div></div>
+      <div class="info-item"><div class="info-label">ポジション</div><div class="info-value">ミッドフィルダー</div></div>
+    </div>
+    <div class="card-quote">「古長谷」という珍しい苗字で一度聞いたら忘れられない。静岡サッカー王国産のテクニシャン。</div>
+  </div>
+</div>
+
+<div class="card" data-pos="MF" data-tag="復帰">
+  <div class="card-header">
+    <div class="card-number">17</div>
+    <div class="card-pos-block"><span class="card-pos mf">MF</span><span class="card-new" style="color:#4FC3F7;border-color:rgba(79,195,247,0.4);background:rgba(79,195,247,0.08);">復帰</span></div>
+  </div>
+  <div class="card-body">
+    <div class="card-name">シマブク カズヨシ</div>
+    <div class="card-name-en">SHIMABUKU Kazuyoshi</div>
+    <div class="card-info">
+      <div class="info-item"><div class="info-label">年齢</div><div class="info-value">26歳</div></div>
+      <div class="info-item"><div class="info-label">出身地</div><div class="info-value">ペルー</div></div>
+      <div class="info-item"><div class="info-label">前所属</div><div class="info-value">藤枝MYFC</div></div>
+      <div class="info-item"><div class="info-label">ポジション</div><div class="info-value">ミッドフィルダー</div></div>
+    </div>
+    <div class="card-quote">ペルー出身で名前は「カズヨシ」というギャップが最高。南米のリズム感と日本のきめ細かさを併せ持つ。</div>
+  </div>
+</div>
+
+<div class="card" data-pos="MF">
+  <div class="card-header">
+    <div class="card-number">19</div>
+    <div class="card-pos-block"><span class="card-pos mf">MF</span></div>
+  </div>
+  <div class="card-body">
+    <div class="card-name">星 雄次</div>
+    <div class="card-name-en">HOSHI Yuji</div>
+    <div class="card-info">
+      <div class="info-item"><div class="info-label">年齢</div><div class="info-value">33歳</div></div>
+      <div class="info-item"><div class="info-label">出身地</div><div class="info-value">神奈川県</div></div>
+      <div class="info-item"><div class="info-label">前所属</div><div class="info-value">大分トリニータ</div></div>
+      <div class="info-item"><div class="info-label">ポジション</div><div class="info-value">ミッドフィルダー</div></div>
+    </div>
+    <div class="card-quote">名前が「星」なのにサッカーでもスター。33歳でまだまだ輝き続ける神奈川出身のウィングが降臨。</div>
+  </div>
+</div>
+
+<div class="card" data-pos="MF">
+  <div class="card-header">
+    <div class="card-number">22</div>
+    <div class="card-pos-block"><span class="card-pos mf">MF</span></div>
+  </div>
+  <div class="card-body">
+    <div class="card-name">新井 泰貴</div>
+    <div class="card-name-en">ARAI Yasutaka</div>
+    <div class="card-info">
+      <div class="info-item"><div class="info-label">年齢</div><div class="info-value">28歳</div></div>
+      <div class="info-item"><div class="info-label">出身地</div><div class="info-value">神奈川県</div></div>
+      <div class="info-item"><div class="info-label">前所属</div><div class="info-value">藤枝MYFC</div></div>
+      <div class="info-item"><div class="info-label">ポジション</div><div class="info-value">ミッドフィルダー</div></div>
+    </div>
+    <div class="card-quote">藤枝で磨いたサイドアタッカーが新潟へ。「泰貴」の貴公子ルックで、相手SBを翻弄するドリブラー。</div>
+  </div>
+</div>
+
+<div class="card" data-pos="MF">
+  <div class="card-header">
+    <div class="card-number">25</div>
+    <div class="card-pos-block"><span class="card-pos mf">MF</span></div>
+  </div>
+  <div class="card-body">
+    <div class="card-name">藤原 奏哉</div>
+    <div class="card-name-en">FUJIWARA Kazuya</div>
+    <div class="card-info">
+      <div class="info-item"><div class="info-label">年齢</div><div class="info-value">30歳</div></div>
+      <div class="info-item"><div class="info-label">出身地</div><div class="info-value">山口県</div></div>
+      <div class="info-item"><div class="info-label">前所属</div><div class="info-value">ギラヴァンツ北九州</div></div>
+      <div class="info-item"><div class="info-label">ポジション</div><div class="info-value">ミッドフィルダー</div></div>
+    </div>
+    <div class="card-quote">山口出身で「奏哉」という音楽的な名前。ピッチでも指揮者のようにリズムを刻む右SBの職人肌。</div>
+  </div>
+</div>
+
+<div class="card" data-pos="MF">
+  <div class="card-header">
+    <div class="card-number">28</div>
+    <div class="card-pos-block"><span class="card-pos mf">MF</span></div>
+  </div>
+  <div class="card-body">
+    <div class="card-name">島村 拓弥</div>
+    <div class="card-name-en">SHIMAMURA Takuya</div>
+    <div class="card-info">
+      <div class="info-item"><div class="info-label">年齢</div><div class="info-value">27歳</div></div>
+      <div class="info-item"><div class="info-label">出身地</div><div class="info-value">岡山県</div></div>
+      <div class="info-item"><div class="info-label">前所属</div><div class="info-value">柏レイソル</div></div>
+      <div class="info-item"><div class="info-label">ポジション</div><div class="info-value">ミッドフィルダー</div></div>
+    </div>
+    <div class="card-quote">岡山の桃太郎精神で柏の黄色を経て新潟のオレンジへ。タクティカルな動きで相手を手玉に取る。</div>
+  </div>
+</div>
+
+<div class="card" data-pos="MF">
+  <div class="card-header">
+    <div class="card-number">30</div>
+    <div class="card-pos-block"><span class="card-pos mf">MF</span></div>
+  </div>
+  <div class="card-body">
+    <div class="card-name">奥村 仁</div>
+    <div class="card-name-en">OKUMURA Jin</div>
+    <div class="card-info">
+      <div class="info-item"><div class="info-label">年齢</div><div class="info-value">24歳</div></div>
+      <div class="info-item"><div class="info-label">出身地</div><div class="info-value">大阪府</div></div>
+      <div class="info-item"><div class="info-label">前所属</div><div class="info-value">関西福祉大</div></div>
+      <div class="info-item"><div class="info-label">ポジション</div><div class="info-value">ミッドフィルダー</div></div>
+    </div>
+    <div class="card-quote">大阪育ちの「仁義なき」ボランチ。大学から直接プロ入りのルーキーが大阪のノリで中盤を仕切る。</div>
+  </div>
+</div>
+
+<div class="card" data-pos="MF" data-tag="復帰">
+  <div class="card-header">
+    <div class="card-number">40</div>
+    <div class="card-pos-block"><span class="card-pos mf">MF</span><span class="card-new" style="color:#4FC3F7;border-color:rgba(79,195,247,0.4);background:rgba(79,195,247,0.08);">復帰</span></div>
+  </div>
+  <div class="card-body">
+    <div class="card-name">石山 青空</div>
+    <div class="card-name-en">ISHIYAMA Sora</div>
+    <div class="card-info">
+      <div class="info-item"><div class="info-label">年齢</div><div class="info-value">20歳</div></div>
+      <div class="info-item"><div class="info-label">出身地</div><div class="info-value">新潟県</div></div>
+      <div class="info-item"><div class="info-label">前所属</div><div class="info-value">松本山雅</div></div>
+      <div class="info-item"><div class="info-label">ポジション</div><div class="info-value">ミッドフィルダー</div></div>
+    </div>
+    <div class="card-quote">名前が「青空」というだけでもう好き。新潟生まれの20歳が松本の山岳鍛練を経て故郷の空に帰ってきた！</div>
+  </div>
+</div>
+
+<div class="card" data-pos="MF">
+  <div class="card-header">
+    <div class="card-number">46</div>
+    <div class="card-pos-block"><span class="card-pos mf">MF</span></div>
+  </div>
+  <div class="card-body">
+    <div class="card-name">笠井 佳祐</div>
+    <div class="card-name-en">KASAI Keisuke</div>
+    <div class="card-info">
+      <div class="info-item"><div class="info-label">年齢</div><div class="info-value">23歳</div></div>
+      <div class="info-item"><div class="info-label">出身地</div><div class="info-value">千葉県</div></div>
+      <div class="info-item"><div class="info-label">前所属</div><div class="info-value">桐蔭横浜大</div></div>
+      <div class="info-item"><div class="info-label">ポジション</div><div class="info-value">ミッドフィルダー</div></div>
+    </div>
+    <div class="card-quote">桐蔭横浜大から直接プロ入りの即戦力候補。千葉の「笠」をかぶった才能が新潟の雨にも負けず躍動する。</div>
+  </div>
+</div>
+
+<div class="card" data-pos="MF">
+  <div class="card-header">
+    <div class="card-number">48</div>
+    <div class="card-pos-block"><span class="card-pos mf">MF</span></div>
+  </div>
+  <div class="card-body">
+    <div class="card-name">大竹 優心</div>
+    <div class="card-name-en">OTAKE Yushin</div>
+    <div class="card-info">
+      <div class="info-item"><div class="info-label">年齢</div><div class="info-value">20歳</div></div>
+      <div class="info-item"><div class="info-label">出身地</div><div class="info-value">新潟県</div></div>
+      <div class="info-item"><div class="info-label">前所属</div><div class="info-value">Y.S.C.C.横浜</div></div>
+      <div class="info-item"><div class="info-label">ポジション</div><div class="info-value">ミッドフィルダー</div></div>
+    </div>
+    <div class="card-quote">新潟出身の地元っ子が横浜でポップなサッカーを学んで帰郷。「優心」の名のように優しいパスで前線を活かす。</div>
+  </div>
+</div>
+
+<div class="card" data-pos="MF" data-tag="復帰">
+  <div class="card-header">
+    <div class="card-number">96</div>
+    <div class="card-pos-block"><span class="card-pos mf">MF</span><span class="card-new" style="color:#4FC3F7;border-color:rgba(79,195,247,0.4);background:rgba(79,195,247,0.08);">復帰</span></div>
+  </div>
+  <div class="card-body">
+    <div class="card-name">吉田 陣平</div>
+    <div class="card-name-en">YOSHIDA Jinpei</div>
+    <div class="card-info">
+      <div class="info-item"><div class="info-label">年齢</div><div class="info-value">22歳</div></div>
+      <div class="info-item"><div class="info-label">出身地</div><div class="info-value">新潟県</div></div>
+      <div class="info-item"><div class="info-label">前所属</div><div class="info-value">カマタマーレ讃岐</div></div>
+      <div class="info-item"><div class="info-label">ポジション</div><div class="info-value">ミッドフィルダー</div></div>
+    </div>
+    <div class="card-quote">背番号96の陣平が讃岐うどんを食べ尽くして新潟に凱旋。新潟県産のMFが地元愛全開でプレーする。</div>
+  </div>
+</div>
+
+<!-- FW -->
+<div class="card" data-pos="FW">
+  <div class="card-header">
+    <div class="card-number">18</div>
+    <div class="card-pos-block"><span class="card-pos fw">FW</span></div>
+  </div>
+  <div class="card-body">
+    <div class="card-name">若月 大和</div>
+    <div class="card-name-en">WAKATSUKI Yamato</div>
+    <div class="card-info">
+      <div class="info-item"><div class="info-label">年齢</div><div class="info-value">24歳</div></div>
+      <div class="info-item"><div class="info-label">出身地</div><div class="info-value">群馬県</div></div>
+      <div class="info-item"><div class="info-label">前所属</div><div class="info-value">レノファ山口</div></div>
+      <div class="info-item"><div class="info-label">ポジション</div><div class="info-value">フォワード</div></div>
+    </div>
+    <div class="card-quote">群馬・大和魂を持つ24歳FW。山口の山道を走り込んで鍛えたスタミナとゴール嗅覚が武器。</div>
+  </div>
+</div>
+
+<div class="card" data-pos="FW" data-tag="新加入">
+  <div class="card-header">
+    <div class="card-number">55</div>
+    <div class="card-pos-block"><span class="card-pos fw">FW</span><span class="card-new">新加入</span></div>
+  </div>
+  <div class="card-body">
+    <div class="card-name">マテウス・モラエス</div>
+    <div class="card-name-en">MATHEUS MORAES</div>
+    <div class="card-info">
+      <div class="info-item"><div class="info-label">年齢</div><div class="info-value">25歳</div></div>
+      <div class="info-item"><div class="info-label">出身地</div><div class="info-value">ブラジル</div></div>
+      <div class="info-item"><div class="info-label">前所属</div><div class="info-value">マリンガ(BRA)</div></div>
+      <div class="info-item"><div class="info-label">ポジション</div><div class="info-value">フォワード</div></div>
+    </div>
+    <div class="card-quote">開幕から3ゴールの大暴れ！ブラジルから直輸入されたゴールマシン。マリンガ出身とは思えない凄まじい適応力。</div>
+  </div>
+</div>
+
+<div class="card" data-pos="FW">
+  <div class="card-header">
+    <div class="card-number">99</div>
+    <div class="card-pos-block"><span class="card-pos fw">FW</span></div>
+  </div>
+  <div class="card-body">
+    <div class="card-name">小野 裕二</div>
+    <div class="card-name-en">ONO Yuji</div>
+    <div class="card-info">
+      <div class="info-item"><div class="info-label">年齢</div><div class="info-value">33歳</div></div>
+      <div class="info-item"><div class="info-label">出身地</div><div class="info-value">神奈川県</div></div>
+      <div class="info-item"><div class="info-label">前所属</div><div class="info-value">サガン鳥栖</div></div>
+      <div class="info-item"><div class="info-label">ポジション</div><div class="info-value">フォワード</div></div>
+    </div>
+    <div class="card-quote">背番号99のベテランストライカー。33歳になっても鳥栖の九州魂を携えて点を取り続ける。神奈川生まれの男が新潟の9番として君臨。</div>
+  </div>
+</div>
+```
+
+  </div>
+</div>
+
+<footer>
+  <strong>ALBIREX NIIGATA 2026</strong> — 選手名鑑<br>
+  <span style="margin-top:6px;display:block;">データ出典: J.LEAGUE 公式 / 各種スポーツメディア | 一言コメントは演出です</span>
+</footer>
+
+<script>
+  function filter(pos) {
+    const cards = document.querySelectorAll('.card');
+    const btns = document.querySelectorAll('.filter-btn');
+    btns.forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+
+    cards.forEach(card => {
+      if (pos === 'ALL') {
+        card.classList.remove('hidden');
+      } else if (pos === '新加入') {
+        const tag = card.dataset.tag || '';
+        if (tag === '新加入') card.classList.remove('hidden');
+        else card.classList.add('hidden');
+      } else {
+        if (card.dataset.pos === pos) card.classList.remove('hidden');
+        else card.classList.add('hidden');
+      }
+    });
+  }
+</script>
+
+</body>
+</html>
