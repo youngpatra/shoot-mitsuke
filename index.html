@@ -13,14 +13,14 @@
 ```
 :root {
   --bg: #000000;
-  --surface: #0a0a0a;
   --surface2: #0e0e11;
-  --border: rgba(0, 0, 0, 0.5);
+  --border: rgba(255,255,255,0.07);
   --text: #f0f0f0;
   --muted: #555;
-  --accent1: #e8ff47;
-  --accent2: #ff3cac;
-  --accent3: #00d4ff;
+  --accent1: #e8ff47;   /* lime */
+  --accent2: #ff3cac;   /* pink */
+  --accent3: #00d4ff;   /* cyan */
+  --accent4: #F05A1A;   /* albirex orange */
 }
 
 html { scroll-behavior: smooth; }
@@ -33,12 +33,14 @@ body {
   overflow-x: hidden;
 }
 
-/* ==============================  NAV  */
+/* ==============================
+   NAV
+============================== */
 nav {
   position: fixed; top: 0; left: 0; right: 0; z-index: 100;
   display: flex; align-items: center; justify-content: space-between;
   padding: 20px 40px;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0,0,0,0.75);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border);
@@ -60,7 +62,9 @@ nav {
 }
 .nav-badge { font-size: 11px; color: var(--muted); letter-spacing: 1px; }
 
-/* ==============================  HERO  */
+/* ==============================
+   HERO
+============================== */
 .hero {
   position: relative;
   min-height: 100vh;
@@ -90,8 +94,16 @@ nav {
 .hero-glow.g3 {
   width: 400px; height: 400px;
   background: rgba(0,212,255,0.04);
-  top: 40%; left: 50%; transform: translate(-50%,-50%);
+  top: 40%; left: 50%;
+  transform: translate(-50%,-50%);
   animation: driftA 18s ease-in-out infinite alternate-reverse;
+}
+/* albirex orange glow */
+.hero-glow.g4 {
+  width: 350px; height: 350px;
+  background: rgba(240,90,26,0.05);
+  top: 20%; right: 5%;
+  animation: driftB 20s ease-in-out infinite alternate;
 }
 @keyframes driftA { to{ transform: translate(60px,40px); } }
 @keyframes driftB { to{ transform: translate(-60px,-40px); } }
@@ -190,11 +202,12 @@ nav {
   animation: scrollDrop 1.8s ease-in-out infinite;
 }
 @keyframes scrollDrop {
-  0%,100%{ opacity:1; transform: scaleY(1); }
-  50%{ opacity:0.3; transform: scaleY(0.5); }
+  0%,100%{ opacity:1; } 50%{ opacity:0.3; }
 }
 
-/* ==============================  GAMES SECTION  */
+/* ==============================
+   GAMES SECTION
+============================== */
 .games-section {
   max-width: 1200px; margin: 0 auto;
   padding: 80px 24px 120px;
@@ -208,14 +221,18 @@ nav {
 .section-title { font-size: clamp(28px, 4vw, 40px); font-weight: 900; line-height: 1.1; }
 .section-count { font-size: 80px; font-weight: 900; color: rgba(255,255,255,0.03); line-height: 1; letter-spacing: -2px; flex-shrink: 0; }
 
+/* 4枚グリッド：2×2 → 1列 on mobile */
 .cards-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 16px;
 }
-@media (max-width: 900px) { .cards-grid { grid-template-columns: 1fr 1fr; } }
-@media (max-width: 580px) { .cards-grid { grid-template-columns: 1fr; } }
+@media (max-width: 1100px) { .cards-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 580px)  { .cards-grid { grid-template-columns: 1fr; } }
 
+/* ==============================
+   CARD BASE
+============================== */
 .game-card {
   position: relative;
   display: flex; flex-direction: column;
@@ -226,23 +243,31 @@ nav {
   transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
   animation: fadeUp 0.6s ease both;
 }
-.game-card:nth-child(1){ animation-delay: 0.1s; }
-.game-card:nth-child(2){ animation-delay: 0.18s; }
-.game-card:nth-child(3){ animation-delay: 0.26s; }
-.game-card:hover { transform: translateY(-6px); }
-.game-card.c-bd:hover    { border-color: rgba(255,60,172,0.4); box-shadow: 0 20px 60px rgba(255,60,172,0.1); }
-.game-card.c-futon:hover { border-color: rgba(232,255,71,0.35); box-shadow: 0 20px 60px rgba(232,255,71,0.08); }
-.game-card.c-nameko:hover{ border-color: rgba(0,212,255,0.4); box-shadow: 0 20px 60px rgba(0,212,255,0.1); }
+.game-card:nth-child(1){ animation-delay: 0.08s; }
+.game-card:nth-child(2){ animation-delay: 0.16s; }
+.game-card:nth-child(3){ animation-delay: 0.24s; }
+.game-card:nth-child(4){ animation-delay: 0.32s; }
 
+.game-card:hover { transform: translateY(-6px); }
+
+/* per-card glow colors */
+.game-card.c-bd:hover     { border-color: rgba(255,60,172,0.4);  box-shadow: 0 20px 60px rgba(255,60,172,0.10); }
+.game-card.c-futon:hover  { border-color: rgba(232,255,71,0.35); box-shadow: 0 20px 60px rgba(232,255,71,0.08); }
+.game-card.c-nameko:hover { border-color: rgba(0,212,255,0.4);   box-shadow: 0 20px 60px rgba(0,212,255,0.10); }
+.game-card.c-albirex:hover{ border-color: rgba(240,90,26,0.5);   box-shadow: 0 20px 60px rgba(240,90,26,0.14); }
+
+/* ── card visual area ── */
 .card-visual {
-  position: relative; height: 200px;
+  position: relative; height: 180px;
   display: flex; align-items: center; justify-content: center;
   overflow: hidden;
 }
-.c-bd    .card-visual { background: radial-gradient(ellipse at 40% 40%, #180512 0%, #0a0008 100%); }
-.c-futon .card-visual { background: radial-gradient(ellipse at 40% 40%, #131608 0%, #08090a 100%); }
+.c-bd     .card-visual { background: radial-gradient(ellipse at 40% 40%, #180512 0%, #0a0008 100%); }
+.c-futon  .card-visual { background: radial-gradient(ellipse at 40% 40%, #131608 0%, #08090a 100%); }
 .c-nameko .card-visual { background: radial-gradient(ellipse at 40% 40%, #041518 0%, #020809 100%); }
+.c-albirex .card-visual { background: radial-gradient(ellipse at 40% 40%, #1a0e05 0%, #0a0603 100%); }
 
+/* subtle grid overlay */
 .card-visual::before {
   content: ''; position: absolute; inset: 0;
   background-image:
@@ -250,28 +275,32 @@ nav {
     linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
   background-size: 24px 24px;
 }
+/* bottom accent line */
 .card-visual::after {
   content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
 }
-.c-bd    .card-visual::after { background: linear-gradient(90deg, transparent, var(--accent2), transparent); }
-.c-futon .card-visual::after { background: linear-gradient(90deg, transparent, var(--accent1), transparent); }
+.c-bd     .card-visual::after { background: linear-gradient(90deg, transparent, var(--accent2), transparent); }
+.c-futon  .card-visual::after { background: linear-gradient(90deg, transparent, var(--accent1), transparent); }
 .c-nameko .card-visual::after { background: linear-gradient(90deg, transparent, var(--accent3), transparent); }
+.c-albirex .card-visual::after { background: linear-gradient(90deg, transparent, var(--accent4), transparent); }
 
 .card-emoji {
-  font-size: 68px; position: relative; z-index: 1;
+  font-size: 62px; position: relative; z-index: 1;
   filter: drop-shadow(0 0 28px rgba(255,255,255,0.08));
   animation: floatIcon 3.5s ease-in-out infinite;
 }
 .game-card:nth-child(2) .card-emoji { animation-delay: -1.2s; }
 .game-card:nth-child(3) .card-emoji { animation-delay: -2.4s; }
+.game-card:nth-child(4) .card-emoji { animation-delay: -0.6s; }
 @keyframes floatIcon { 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-10px); } }
 
 .card-num {
-  position: absolute; top: 16px; left: 18px;
+  position: absolute; top: 14px; left: 16px;
   font-size: 11px; font-weight: 700; letter-spacing: 2px;
   color: rgba(255,255,255,0.18);
 }
 
+/* PLAY overlay */
 .card-overlay {
   position: absolute; inset: 0;
   display: flex; align-items: center; justify-content: center;
@@ -282,48 +311,52 @@ nav {
 .game-card:hover .card-overlay { opacity: 1; }
 .play-pill {
   display: flex; align-items: center; gap: 8px;
-  padding: 10px 24px; border-radius: 100px;
+  padding: 10px 22px; border-radius: 100px;
   font-size: 13px; font-weight: 700; letter-spacing: 1px;
   transform: scale(0.88) translateY(6px);
   transition: transform 0.25s ease;
 }
-.c-bd    .play-pill { background: var(--accent2); color: #fff; }
-.c-futon .play-pill { background: var(--accent1); color: #000; }
+.c-bd     .play-pill { background: var(--accent2); color: #fff; }
+.c-futon  .play-pill { background: var(--accent1); color: #000; }
 .c-nameko .play-pill { background: var(--accent3); color: #000; }
+.c-albirex .play-pill { background: var(--accent4); color: #fff; }
 .game-card:hover .play-pill { transform: scale(1) translateY(0); }
 
+/* card body */
 .card-body {
-  padding: 22px 22px 24px;
+  padding: 20px 20px 22px;
   display: flex; flex-direction: column; flex: 1;
 }
 .card-genre {
   font-size: 10px; letter-spacing: 3px; font-weight: 600;
-  text-transform: uppercase; margin-bottom: 10px;
+  text-transform: uppercase; margin-bottom: 8px;
 }
-.c-bd    .card-genre { color: var(--accent2); }
-.c-futon .card-genre { color: var(--accent1); }
+.c-bd     .card-genre { color: var(--accent2); }
+.c-futon  .card-genre { color: var(--accent1); }
 .c-nameko .card-genre { color: var(--accent3); }
+.c-albirex .card-genre { color: var(--accent4); }
 
-.card-title { font-size: 20px; font-weight: 900; line-height: 1.25; margin-bottom: 10px; }
+.card-title { font-size: 18px; font-weight: 900; line-height: 1.25; margin-bottom: 8px; }
 .card-desc { font-size: 12px; color: var(--muted); line-height: 1.75; flex: 1; }
 
 .card-footer {
   display: flex; align-items: center; justify-content: space-between;
-  margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border);
+  margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border);
 }
 .card-tag {
   font-size: 10px; letter-spacing: 2px; font-weight: 600;
   padding: 4px 10px; border-radius: 100px; border: 1px solid;
 }
-.c-bd    .card-tag { border-color: rgba(255,60,172,0.3); color: var(--accent2); }
-.c-futon .card-tag { border-color: rgba(232,255,71,0.3); color: var(--accent1); }
-.c-nameko .card-tag { border-color: rgba(0,212,255,0.3); color: var(--accent3); }
+.c-bd     .card-tag { border-color: rgba(255,60,172,0.3); color: var(--accent2); }
+.c-futon  .card-tag { border-color: rgba(232,255,71,0.3); color: var(--accent1); }
+.c-nameko .card-tag { border-color: rgba(0,212,255,0.3);  color: var(--accent3); }
+.c-albirex .card-tag { border-color: rgba(240,90,26,0.35); color: var(--accent4); }
 
 .card-arrow {
-  width: 32px; height: 32px; border-radius: 50%;
+  width: 30px; height: 30px; border-radius: 50%;
   border: 1px solid var(--border);
   display: flex; align-items: center; justify-content: center;
-  font-size: 14px; color: var(--muted);
+  font-size: 13px; color: var(--muted);
   transition: all 0.2s ease;
 }
 .game-card:hover .card-arrow {
@@ -332,14 +365,18 @@ nav {
   color: var(--text); transform: translateX(3px);
 }
 
-/* ==============================  DIVIDER  */
+/* ==============================
+   DIVIDER
+============================== */
 .divider {
   height: 1px;
   background: linear-gradient(90deg, transparent, var(--border), transparent);
   margin: 0 40px;
 }
 
-/* ==============================  FOOTER  */
+/* ==============================
+   FOOTER
+============================== */
 footer {
   padding: 40px;
   display: flex; align-items: center; justify-content: space-between;
@@ -349,10 +386,14 @@ footer {
 .footer-sub { font-size: 11px; color: var(--muted); letter-spacing: 2px; margin-top: 4px; }
 .footer-right { font-size: 11px; color: var(--muted); letter-spacing: 1px; }
 
+/* ==============================
+   ANIMATION
+============================== */
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(24px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
 @media (max-width: 640px) {
   nav { padding: 16px 20px; }
   footer { padding: 32px 20px; }
@@ -363,6 +404,8 @@ footer {
 </head>
 <body>
 
+<!-- NAV -->
+
 <nav>
   <div class="nav-logo">
     <div class="dot"></div>
@@ -371,27 +414,28 @@ footer {
   <div class="nav-badge">NIIGATA / MITSUKE</div>
 </nav>
 
+<!-- HERO -->
+
 <section class="hero">
   <div class="hero-glow g1"></div>
   <div class="hero-glow g2"></div>
   <div class="hero-glow g3"></div>
+  <div class="hero-glow g4"></div>
 
   <div class="hero-eyebrow">Niigata · Mitsuke City</div>
-
   <div class="hero-number"><span class="hi">02</span>58</div>
-
   <h1 class="hero-title">見附市<span class="accent">ゲーム</span>倶楽部</h1>
   <p class="hero-sub">MITSUKE CITY GAME CLUB</p>
 
   <div class="hero-cta">
-    <a href="#games" class="btn-primary">ゲームを選ぶ ↓</a>
-    <a href="#games" class="btn-ghost">03 GAMES AVAILABLE</a>
+    <a href="#games" class="btn-primary">コンテンツを見る ↓</a>
+    <a href="#games" class="btn-ghost">04 TITLES AVAILABLE</a>
   </div>
 
   <div class="hero-stats">
     <div class="stat-item">
-      <span class="stat-num">03</span>
-      <span class="stat-label">Games</span>
+      <span class="stat-num">04</span>
+      <span class="stat-label">Titles</span>
     </div>
     <div class="stat-item">
       <span class="stat-num stat-div">|</span>
@@ -417,23 +461,26 @@ footer {
 
 <div class="divider"></div>
 
+<!-- GAMES -->
+
 <section class="games-section" id="games">
   <div class="section-header">
     <div>
-      <div class="section-tag">— Game Library</div>
-      <h2 class="section-title">全ゲーム一覧</h2>
+      <div class="section-tag">— Contents Library</div>
+      <h2 class="section-title">全コンテンツ一覧</h2>
     </div>
-    <div class="section-count">03</div>
+    <div class="section-count">04</div>
   </div>
 
   <div class="cards-grid">
 
 ```
+<!-- 01 BreakingDown -->
 <a class="game-card c-bd" href="breakingdown_interview.html">
   <div class="card-visual">
     <span class="card-num">01</span>
     <div class="card-emoji">⚡</div>
-    <div class="card-overlay"><div class="play-pill">▶ PLAY NOW</div></div>
+    <div class="card-overlay"><div class="play-pill">▶ PLAY</div></div>
   </div>
   <div class="card-body">
     <div class="card-genre">Interview Sim</div>
@@ -446,11 +493,12 @@ footer {
   </div>
 </a>
 
+<!-- 02 布団ちゃん -->
 <a class="game-card c-futon" href="futon_game.html">
   <div class="card-visual">
     <span class="card-num">02</span>
     <div class="card-emoji">🛌</div>
-    <div class="card-overlay"><div class="play-pill">▶ PLAY NOW</div></div>
+    <div class="card-overlay"><div class="play-pill">▶ PLAY</div></div>
   </div>
   <div class="card-body">
     <div class="card-genre">Stream Simulator</div>
@@ -463,11 +511,12 @@ footer {
   </div>
 </a>
 
+<!-- 03 なめこ -->
 <a class="game-card c-nameko" href="nameko_shooter.html">
   <div class="card-visual">
     <span class="card-num">03</span>
     <div class="card-emoji">🍄</div>
-    <div class="card-overlay"><div class="play-pill">▶ PLAY NOW</div></div>
+    <div class="card-overlay"><div class="play-pill">▶ PLAY</div></div>
   </div>
   <div class="card-body">
     <div class="card-genre">2D Shooter</div>
@@ -479,6 +528,24 @@ footer {
     </div>
   </div>
 </a>
+
+<!-- 04 アルビレックス -->
+<a class="game-card c-albirex" href="albirex2026.html">
+  <div class="card-visual">
+    <span class="card-num">04</span>
+    <div class="card-emoji">🦢</div>
+    <div class="card-overlay"><div class="play-pill">▶ VIEW</div></div>
+  </div>
+  <div class="card-body">
+    <div class="card-genre">Football / Roster</div>
+    <h3 class="card-title">ALBIREX<br>NIIGATA 2026</h3>
+    <p class="card-desc">アルビレックス新潟 2026シーズン選手名鑑。31名のスカッドをポジション別に一気に確認。</p>
+    <div class="card-footer">
+      <span class="card-tag">J2 · 2026</span>
+      <div class="card-arrow">→</div>
+    </div>
+  </div>
+</a>
 ```
 
   </div>
@@ -486,13 +553,15 @@ footer {
 
 <div class="divider"></div>
 
+<!-- FOOTER -->
+
 <footer>
   <div>
     <div class="footer-name">0258 見附市ゲーム倶楽部</div>
     <div class="footer-sub">MITSUKE CITY GAME CLUB · NIIGATA</div>
   </div>
-  <div class="footer-right">All games free to play in browser</div>
+  <div class="footer-right">All contents free to play in browser</div>
 </footer>
 
 </body>
-</html></html>
+</html></html></html>
