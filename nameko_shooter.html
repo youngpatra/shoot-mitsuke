@@ -2,281 +2,1879 @@
 
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>なめこシューティング ✈️</title>
-  <style>
-    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-    html,body { width:100%; height:100%; overflow:hidden; background:#0a0a1a; touch-action:none; }
-    body { display:flex; align-items:center; justify-content:center; }
-    #gameCanvas { display:block; box-shadow:0 0 30px rgba(74,158,255,0.4); image-rendering:pixelated; touch-action:none; }
-    #controller { position:fixed; bottom:0; left:0; right:0; height:180px; pointer-events:none; display:none; }
-    #stick-area { position:absolute; left:24px; bottom:24px; width:120px; height:120px; pointer-events:auto; }
-    #stick-base { position:absolute; inset:0; border-radius:50%; background:rgba(255,255,255,0.08); border:2px solid rgba(255,255,255,0.2); }
-    #stick-knob { position:absolute; width:50px; height:50px; border-radius:50%; background:radial-gradient(circle at 35% 35%,rgba(255,255,255,0.5),rgba(100,180,255,0.35)); border:2px solid rgba(255,255,255,0.4); top:50%; left:50%; transform:translate(-50%,-50%); pointer-events:none; }
-    #shoot-btn { position:absolute; right:32px; bottom:32px; width:90px; height:90px; border-radius:50%; background:radial-gradient(circle at 35% 35%,rgba(255,80,80,0.8),rgba(180,20,20,0.7)); border:3px solid rgba(255,120,120,0.6); display:flex; align-items:center; justify-content:center; font-size:28px; pointer-events:auto; user-select:none; box-shadow:0 0 18px rgba(255,60,60,0.4); transition:transform 0.08s,box-shadow 0.08s; }
-    #shoot-btn.pressed { transform:scale(0.92); box-shadow:0 0 8px rgba(255,60,60,0.3); }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>見附出身のレアキャラを当てろ。</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --gold: #FFD700;
+  --silver: #C0C0C0;
+  --night-bg: #050a14;
+  --night-mid: #0a1628;
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body { width:100%; height:100%; overflow:hidden; font-family:'Noto Sans JP', sans-serif; background:#050a14; }
+
+/* ===== SCREENS ===== */
+.screen { position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; transition:opacity .5s; }
+.screen.hidden { opacity:0; pointer-events:none; }
+
+/* ===== TITLE SCREEN ===== */
+#titleScreen {
+background: linear-gradient(180deg, #020810 0%, #06142a 40%, #0a1f3d 70%, #1a2a1a 100%);
+overflow:hidden;
+}
+.stars-layer { position:absolute; inset:0; }
+.star-dot { position:absolute; background:#fff; border-radius:50%; animation: twinkle var(–d,3s) var(–delay,0s) infinite alternate; }
+@keyframes twinkle { from{opacity:.2;} to{opacity:1;} }
+
+/* Houses silhouette */
+.houses { position:absolute; bottom:0; left:0; right:0; }
+
+/* Street lamp glow */
+.lamp-glow {
+position:absolute; bottom:18%; left:50%;
+width:200px; height:200px;
+background:radial-gradient(circle, rgba(255,220,100,.18) 0%, transparent 70%);
+transform:translateX(-50%);
+animation: lampPulse 3s infinite alternate;
+}
+@keyframes lampPulse { from{opacity:.7;} to{opacity:1;} }
+
+.title-wrap { position:relative; z-index:10; text-align:center; padding:20px; }
+.title-main {
+font-size:clamp(1.4rem,5vw,2.2rem);
+font-weight:900;
+color:#fff;
+text-shadow: 0 0 20px rgba(100,180,255,.8), 0 2px 4px rgba(0,0,0,.9);
+line-height:1.4;
+margin-bottom:8px;
+}
+.title-sub {
+font-size:clamp(.9rem,3vw,1.1rem);
+color:rgba(180,210,255,.7);
+margin-bottom:40px;
+letter-spacing:.2em;
+}
+.start-btn {
+padding:16px 48px;
+font-size:1.2rem;
+font-weight:700;
+font-family:‘Noto Sans JP’,sans-serif;
+background:linear-gradient(135deg,#ff6b35,#ff3f00);
+color:#fff;
+border:none;
+border-radius:50px;
+cursor:pointer;
+box-shadow:0 0 30px rgba(255,100,0,.6), 0 4px 20px rgba(0,0,0,.5);
+transition:transform .15s, box-shadow .15s;
+animation: btnPulse 2s infinite alternate;
+}
+.start-btn:hover { transform:scale(1.06); box-shadow:0 0 50px rgba(255,100,0,.9),0 4px 20px rgba(0,0,0,.5); }
+@keyframes btnPulse { from{box-shadow:0 0 20px rgba(255,100,0,.5),0 4px 20px rgba(0,0,0,.5);} to{box-shadow:0 0 40px rgba(255,150,0,.8),0 4px 20px rgba(0,0,0,.5);} }
+
+/* ===== MODAL ===== */
+#modal {
+position:fixed; inset:0; z-index:100;
+background:rgba(0,0,0,.85);
+display:flex; align-items:center; justify-content:center;
+opacity:0; pointer-events:none; transition:opacity .3s;
+}
+#modal.show { opacity:1; pointer-events:all; }
+.modal-box {
+background:linear-gradient(135deg,#1a0a2e,#2a0a1a);
+border:2px solid rgba(255,100,0,.6);
+border-radius:20px;
+padding:40px 32px;
+max-width:360px; width:90%;
+text-align:center;
+box-shadow:0 0 60px rgba(255,50,0,.3);
+}
+.modal-box h2 { color:#fff; font-size:1.1rem; line-height:1.7; margin-bottom:32px; }
+.modal-box h2 span { color:#ff6b35; }
+.modal-btns { display:flex; gap:16px; justify-content:center; }
+.modal-btn {
+padding:14px 32px;
+font-size:1rem; font-weight:700;
+font-family:‘Noto Sans JP’,sans-serif;
+background:linear-gradient(135deg,#ff4500,#cc2200);
+color:#fff; border:none; border-radius:12px; cursor:pointer;
+box-shadow:0 4px 15px rgba(255,69,0,.4);
+transition:transform .15s;
+}
+.modal-btn:hover { transform:scale(1.05); }
+
+/* ===== GACHA SCREEN ===== */
+#gachaScreen {
+background: radial-gradient(ellipse at center, #1a0530 0%, #000510 100%);
+overflow:hidden;
+}
+
+/* Dragon hand – manually draggable */
+.dragon-wrap {
+position:absolute;
+width:100%; top:0; left:0;
+display:flex; justify-content:center;
+z-index:5;
+cursor:grab;
+touch-action:none;
+user-select:none;
+will-change:transform;
+}
+.dragon-wrap.dragging { cursor:grabbing; }
+/* scroll hint */
+.drag-hint {
+position:absolute; bottom:10%; left:50%; transform:translateX(-50%);
+z-index:30; text-align:center; pointer-events:none;
+animation: hintBounce 1s infinite alternate;
+}
+@keyframes hintBounce {
+from{transform:translateX(-50%) translateY(0);}
+to{transform:translateX(-50%) translateY(14px);}
+}
+.drag-hint .hint-arrow { font-size:2rem; display:block; color:#FFD700; text-shadow:0 0 15px #ff6600; }
+.drag-hint .hint-label { font-size:.9rem; color:rgba(255,255,200,.8); font-weight:700; letter-spacing:.15em; }
+/* tease overlay */
+#teaseOverlay {
+position:absolute; inset:0; z-index:40;
+display:flex; flex-direction:column; align-items:center; justify-content:center;
+background:rgba(0,0,0,.88);
+opacity:0; pointer-events:none; transition:opacity .4s;
+}
+#teaseOverlay.show { opacity:1; pointer-events:all; }
+.tease-text {
+font-size:clamp(1.5rem,6vw,2.5rem); font-weight:900; color:#FFD700;
+text-shadow:0 0 30px #FFD700, 0 0 60px #ff6600;
+text-align:center; padding:0 24px; line-height:1.8;
+}
+.tease-msg {
+font-size:clamp(1rem,4vw,1.6rem); font-weight:700;
+color:#fff; text-align:center; margin-top:16px;
+text-shadow:0 0 20px rgba(255,100,0,.8);
+animation: teasePulse .6s infinite alternate;
+}
+@keyframes teasePulse { from{opacity:.4; transform:scale(.97);} to{opacity:1; transform:scale(1.03);} }
+.tease-sub { font-size:.85rem; color:rgba(255,255,255,.4); margin-top:12px; letter-spacing:.25em; }
+
+/* Light beams */
+.light-beams {
+position:absolute; inset:0;
+background: conic-gradient(from 0deg at 50% 30%,
+transparent 0deg, rgba(255,200,0,.08) 10deg, transparent 20deg,
+transparent 40deg, rgba(255,150,0,.06) 50deg, transparent 60deg,
+transparent 80deg, rgba(255,200,0,.08) 90deg, transparent 100deg,
+transparent 120deg, rgba(255,180,0,.05) 130deg, transparent 140deg,
+transparent 160deg, rgba(255,200,0,.07) 170deg, transparent 180deg,
+transparent 200deg, rgba(255,150,0,.06) 210deg, transparent 220deg,
+transparent 240deg, rgba(255,200,0,.08) 250deg, transparent 260deg,
+transparent 280deg, rgba(255,180,0,.05) 290deg, transparent 300deg,
+transparent 320deg, rgba(255,200,0,.07) 330deg, transparent 340deg,
+transparent 360deg
+);
+animation: rotateLights 8s linear infinite;
+}
+@keyframes rotateLights { to { transform:rotate(360deg); } }
+
+/* Particles */
+.particle {
+position:absolute;
+border-radius:50%;
+pointer-events:none;
+animation: particleFly var(–dur,2s) var(–delay,0s) ease-out forwards;
+}
+@keyframes particleFly {
+0%   { transform:translate(0,0) scale(1); opacity:1; }
+100% { transform:translate(var(–tx,50px),var(–ty,-100px)) scale(0); opacity:0; }
+}
+
+/* Capsule */
+.capsule-wrap {
+position:absolute; bottom:15%; left:50%; transform:translateX(-50%);
+opacity:0; z-index:20;
+animation: capsuleAppear .6s .2s ease-out forwards;
+}
+@keyframes capsuleAppear {
+from { transform:translateX(-50%) scale(0) rotate(-20deg); opacity:0; }
+to   { transform:translateX(-50%) scale(1) rotate(0deg); opacity:1; }
+}
+@keyframes capsulePulse {
+from { transform:translateX(-50%) scale(1); filter:drop-shadow(0 0 10px #FFD700); }
+to   { transform:translateX(-50%) scale(1.12); filter:drop-shadow(0 0 30px #ff6600); }
+}
+.capsule-crack {
+animation: crackOpen .5s ease-out forwards;
+}
+@keyframes crackOpen {
+0%   { transform:scale(1); }
+30%  { transform:scale(1.3) rotate(5deg); }
+60%  { transform:scale(.8) rotate(-3deg); }
+100% { transform:scale(0); opacity:0; }
+}
+
+/* Flash */
+.flash {
+position:fixed; inset:0; z-index:50;
+background:#fff;
+animation: flashOut .5s ease-out forwards;
+pointer-events:none;
+}
+@keyframes flashOut { from{opacity:1;} to{opacity:0;} }
+
+.shake {
+animation: shakeAnim .4s ease-in-out;
+}
+@keyframes shakeAnim {
+0%,100%{transform:translateX(0);}
+20%{transform:translateX(-8px);}
+40%{transform:translateX(8px);}
+60%{transform:translateX(-6px);}
+80%{transform:translateX(6px);}
+}
+
+/* ===== CARD SCREEN ===== */
+#cardScreen {
+background:radial-gradient(ellipse at center, #0a0a20 0%, #000 100%);
+overflow:hidden;
+}
+
+.card-container { position:relative; z-index:10; text-align:center; padding:20px; }
+.rarity-label {
+font-size:1rem; font-weight:700; letter-spacing:.3em;
+margin-bottom:12px;
+animation: fadeInUp .5s ease;
+}
+.rarity-vr .rarity-label { color:#FFD700; text-shadow:0 0 20px #FFD700; }
+.rarity-sr .rarity-label { color:#C0C0C0; text-shadow:0 0 15px #C0C0C0; }
+.rarity-c  .rarity-label { color:#88aaff; }
+
+.char-card {
+display:inline-block;
+border-radius:20px;
+padding:20px 24px;
+margin-bottom:16px;
+position:relative;
+overflow:hidden;
+animation: cardReveal .7s cubic-bezier(.175,.885,.32,1.275) both;
+}
+@keyframes cardReveal {
+from{opacity:0;transform:scale(.5) rotateY(90deg);}
+to{opacity:1;transform:scale(1) rotateY(0deg);}
+}
+.rarity-vr .char-card {
+background:linear-gradient(135deg,#1a1000,#3a2800);
+border:3px solid #FFD700;
+box-shadow:0 0 40px rgba(255,215,0,.6), 0 0 80px rgba(255,215,0,.3), inset 0 0 20px rgba(255,215,0,.1);
+}
+.rarity-sr .char-card {
+background:linear-gradient(135deg,#0f0f1a,#1a1a2a);
+border:3px solid #C0C0C0;
+box-shadow:0 0 30px rgba(192,192,192,.5), 0 0 60px rgba(192,192,192,.2);
+}
+.rarity-c .char-card {
+background:linear-gradient(135deg,#0a0a1a,#121230);
+border:2px solid #446;
+box-shadow:0 8px 30px rgba(0,0,0,.5);
+}
+
+.char-name {
+font-size:1.3rem; font-weight:900; color:#fff;
+margin-top:12px;
+text-shadow:0 2px 8px rgba(0,0,0,.8);
+}
+.char-serif {
+font-size:.85rem; color:#ffcc88; margin-top:6px;
+font-style:italic; line-height:1.4;
+}
+.next-btn {
+padding:14px 40px;
+font-size:1.1rem; font-weight:700;
+font-family:‘Noto Sans JP’,sans-serif;
+background:linear-gradient(135deg,#4facfe,#00f2fe);
+color:#fff; border:none; border-radius:50px; cursor:pointer;
+box-shadow:0 4px 20px rgba(79,172,254,.4);
+transition:transform .15s;
+margin-top:8px;
+}
+.next-btn:hover { transform:scale(1.05); }
+
+/* VR shimmer */
+.vr-shimmer {
+position:absolute; top:-50%; left:-50%;
+width:200%; height:200%;
+background: linear-gradient(45deg,transparent 30%,rgba(255,215,0,.15) 50%,transparent 70%);
+animation: shimmerMove 2s linear infinite;
+}
+@keyframes shimmerMove { from{transform:translateX(-100%) translateY(-100%);} to{transform:translateX(50%) translateY(50%);} }
+
+/* Confetti */
+.confetti-piece {
+position:fixed; top:-10px;
+width:10px; height:10px;
+border-radius:2px;
+animation: confettiFall var(–dur,3s) var(–delay,0s) linear forwards;
+pointer-events:none; z-index:200;
+}
+@keyframes confettiFall {
+0%   { transform:translateY(0) rotate(0); opacity:1; }
+100% { transform:translateY(110vh) rotate(720deg); opacity:.3; }
+}
+
+/* ===== MINIGAME SCREEN ===== */
+#miniScreen {
+background:#e8f0e0;
+overflow:hidden;
+}
+.field-wrap { position:relative; width:100%; height:100%; }
+
+/* Snow field */
+#snowCanvas { position:absolute; inset:0; width:100%; height:100%; }
+
+.mini-ui {
+position:absolute; top:16px; left:0; right:0;
+display:flex; align-items:center; justify-content:space-between;
+padding:0 16px; z-index:20;
+}
+.tap-counter {
+background:rgba(0,0,20,.7);
+color:#fff; font-weight:700; font-size:1rem;
+padding:8px 16px; border-radius:20px;
+}
+.quit-btn {
+padding:8px 20px;
+font-family:‘Noto Sans JP’,sans-serif;
+font-size:.9rem; font-weight:700;
+background:rgba(200,0,0,.8);
+color:#fff; border:none; border-radius:16px; cursor:pointer;
+}
+
+/* Walking character */
+.walker {
+position:absolute; z-index:10; pointer-events:none;
+transition:left .3s ease, top .3s ease;
+}
+
+/* Clear / Fail overlays */
+.result-overlay {
+position:fixed; inset:0; z-index:150;
+display:flex; flex-direction:column;
+align-items:center; justify-content:center;
+opacity:0; pointer-events:none;
+transition:opacity .5s;
+}
+.result-overlay.show { opacity:1; pointer-events:all; }
+#clearOverlay { background:rgba(0,30,0,.9); }
+#failOverlay  { background:rgba(20,0,0,.92); }
+.result-title {
+font-size:clamp(2rem,8vw,4rem);
+font-weight:900; text-align:center; margin-bottom:16px;
+}
+#clearOverlay .result-title { color:#7fff7f; text-shadow:0 0 30px #0f0; }
+#failOverlay  .result-title { color:#ff4444; text-shadow:0 0 30px #f00; }
+.result-msg { color:#fff; font-size:1rem; margin-bottom:32px; text-align:center; line-height:1.7; }
+.replay-btn {
+padding:14px 40px; font-size:1.1rem; font-weight:700;
+font-family:‘Noto Sans JP’,sans-serif;
+background:linear-gradient(135deg,#ff6b35,#ff3f00);
+color:#fff; border:none; border-radius:50px; cursor:pointer;
+box-shadow:0 4px 20px rgba(255,100,0,.4);
+transition:transform .15s;
+}
+.replay-btn:hover { transform:scale(1.05); }
+
+/* Percent text on snow */
+#percentCanvas { position:absolute; inset:0; width:100%; height:100%; z-index:5; pointer-events:none; opacity:0; transition:opacity .5s; }
+
+/* Angry teacher overlay */
+.angry-teacher {
+position:fixed; bottom:0; left:50%; transform:translateX(-50%);
+z-index:160;
+display:flex; flex-direction:column; align-items:center;
+animation: teacherSlide .5s ease-out both;
+}
+@keyframes teacherSlide { from{transform:translateX(-50%) translateY(100%);} to{transform:translateX(-50%) translateY(0);} }
+.speech-bubble {
+background:#fff; border-radius:16px; padding:12px 20px;
+font-size:1rem; font-weight:700; color:#c00;
+box-shadow:0 4px 20px rgba(0,0,0,.3);
+margin-bottom:8px; text-align:center;
+position:relative;
+animation: bubbleShake .3s .5s ease-in-out infinite alternate;
+max-width:280px;
+}
+@keyframes bubbleShake { from{transform:rotate(-1deg);} to{transform:rotate(1deg);} }
+.speech-bubble::after {
+content:’’; position:absolute; bottom:-12px; left:50%;
+transform:translateX(-50%);
+border:6px solid transparent; border-top-color:#fff;
+}
+
+/* ===== SVG CHARS ===== */
+.svg-char { display:block; margin:0 auto; }
+</style>
+
 </head>
 <body>
-<canvas id="gameCanvas"></canvas>
-<div id="controller">
-  <div id="stick-area"><div id="stick-base"></div><div id="stick-knob"></div></div>
-  <div id="shoot-btn">🔫</div>
+
+<!-- ===== TITLE SCREEN ===== -->
+
+<div class="screen" id="titleScreen">
+  <div class="stars-layer" id="starsLayer"></div>
+  <div class="lamp-glow"></div>
+
+  <!-- Houses SVG silhouette -->
+
+  <div class="houses">
+    <svg viewBox="0 0 800 220" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;">
+      <!-- distant mountains -->
+      <polygon points="0,180 80,80 160,180" fill="#080f1e"/>
+      <polygon points="60,180 160,60 260,180" fill="#091020"/>
+      <polygon points="200,180 320,50 440,180" fill="#080f1e"/>
+      <polygon points="380,180 480,70 580,180" fill="#091020"/>
+      <polygon points="520,180 640,55 760,180" fill="#080f1e"/>
+      <polygon points="650,180 760,80 800,180" fill="#091020"/>
+      <!-- houses -->
+      <rect x="20" y="145" width="60" height="55" fill="#06101e"/>
+      <polygon points="20,145 50,115 80,145" fill="#07121f"/>
+      <rect x="30" y="155" width="15" height="20" fill="#1a2f50" opacity=".7"/>
+      <rect x="55" y="155" width="15" height="20" fill="#1a2f50" opacity=".3"/>
+
+```
+  <rect x="100" y="135" width="50" height="65" fill="#060e1c"/>
+  <polygon points="100,135 125,108 150,135" fill="#07101e"/>
+  <rect x="110" y="148" width="12" height="16" fill="#223550" opacity=".8"/>
+  <rect x="128" y="148" width="12" height="16" fill="#1a2f50" opacity=".4"/>
+
+  <rect x="170" y="150" width="70" height="50" fill="#07101e"/>
+  <polygon points="170,150 205,120 240,150" fill="#060e1c"/>
+  <rect x="185" y="163" width="14" height="18" fill="#1e3355" opacity=".9"/>
+  <rect x="210" y="163" width="14" height="18" fill="#1a2f50" opacity=".5"/>
+  <!-- street lamp -->
+  <rect x="252" y="120" width="4" height="80" fill="#1a2535"/>
+  <rect x="244" y="120" width="20" height="8" rx="4" fill="#2a3545"/>
+  <ellipse cx="254" cy="118" rx="14" ry="5" fill="#ffeeaa" opacity=".9"/>
+  <ellipse cx="254" cy="118" rx="30" ry="20" fill="rgba(255,230,100,.08)"/>
+
+  <rect x="280" y="140" width="55" height="60" fill="#060e1c"/>
+  <polygon points="280,140 307,112 334,140" fill="#07101e"/>
+  <rect x="290" y="153" width="13" height="17" fill="#223555" opacity=".7"/>
+  <rect x="312" y="153" width="13" height="17" fill="#1a2f50" opacity=".3"/>
+
+  <rect x="350" y="130" width="80" height="70" fill="#07101e"/>
+  <polygon points="350,130 390,100 430,130" fill="#060e1c"/>
+  <rect x="365" y="145" width="16" height="20" fill="#1e3355" opacity=".8"/>
+  <rect x="395" y="145" width="16" height="20" fill="#1a2f50" opacity=".4"/>
+  <rect x="375" y="165" width="20" height="35" fill="#07101e"/>
+
+  <rect x="450" y="145" width="60" height="55" fill="#060e1c"/>
+  <polygon points="450,145 480,115 510,145" fill="#07101e"/>
+  <rect x="460" y="157" width="14" height="18" fill="#223555" opacity=".6"/>
+  <rect x="483" y="157" width="14" height="18" fill="#1a2f50" opacity=".3"/>
+
+  <!-- right lamp -->
+  <rect x="524" y="125" width="4" height="75" fill="#1a2535"/>
+  <rect x="516" y="125" width="20" height="8" rx="4" fill="#2a3545"/>
+  <ellipse cx="526" cy="123" rx="14" ry="5" fill="#ffeeaa" opacity=".9"/>
+  <ellipse cx="526" cy="123" rx="28" ry="18" fill="rgba(255,230,100,.07)"/>
+
+  <rect x="550" y="135" width="65" height="65" fill="#07101e"/>
+  <polygon points="550,135 582,105 614,135" fill="#060e1c"/>
+  <rect x="562" y="150" width="14" height="18" fill="#1e3355" opacity=".7"/>
+  <rect x="590" y="150" width="14" height="18" fill="#1a2f50" opacity=".3"/>
+
+  <rect x="630" y="148" width="55" height="52" fill="#060e1c"/>
+  <polygon points="630,148 657,120 684,148" fill="#07101e"/>
+  <rect x="641" y="160" width="13" height="17" fill="#223555" opacity=".5"/>
+
+  <rect x="700" y="138" width="70" height="62" fill="#07101e"/>
+  <polygon points="700,138 735,108 770,138" fill="#060e1c"/>
+  <rect x="715" y="153" width="15" height="19" fill="#1e3355" opacity=".6"/>
+  <rect x="745" y="153" width="15" height="19" fill="#1a2f50" opacity=".3"/>
+
+  <!-- ground -->
+  <rect x="0" y="198" width="800" height="22" fill="#04090f"/>
+</svg>
+```
+
+  </div>
+
+  <div class="title-wrap">
+    <div class="title-main">見附出身のレアキャラを当てろ。</div>
+    <div class="title-sub">全25種</div>
+    <button class="start-btn" onclick="openModal()">ガチャを回す</button>
+  </div>
 </div>
+
+<!-- ===== MODAL ===== -->
+
+<div id="modal">
+  <div class="modal-box">
+    <h2>あなたの<span>小指1本</span>と引き換えに<br>ガチャを回しますか？</h2>
+    <div class="modal-btns">
+      <button class="modal-btn" onclick="startGacha()">はい</button>
+      <button class="modal-btn" onclick="startGacha()">はい</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== GACHA SCREEN ===== -->
+
+<div class="screen hidden" id="gachaScreen">
+  <div class="light-beams"></div>
+  <div id="particleContainer" style="position:absolute;inset:0;pointer-events:none;z-index:3;"></div>
+
+  <!-- Dragon hand SVG -->
+
+  <div class="dragon-wrap" id="dragonWrap" style="display:none;">
+    <svg viewBox="0 0 400 600" xmlns="http://www.w3.org/2000/svg" width="min(380px,90vw)">
+      <!-- Dragon forearm -->
+      <defs>
+        <linearGradient id="scaleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#2d7a2d"/>
+          <stop offset="50%" style="stop-color:#1a5c1a"/>
+          <stop offset="100%" style="stop-color:#0d3d0d"/>
+        </linearGradient>
+        <linearGradient id="clawGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" style="stop-color:#e8e0c0"/>
+          <stop offset="100%" style="stop-color:#8a7a50"/>
+        </linearGradient>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="4" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <!-- Arm body -->
+      <ellipse cx="200" cy="280" rx="110" ry="260" fill="url(#scaleGrad)" filter="url(#glow)"/>
+      <!-- Scale texture -->
+      <g opacity=".4">
+        <ellipse cx="180" cy="150" rx="18" ry="12" fill="#3a9a3a"/>
+        <ellipse cx="220" cy="145" rx="16" ry="11" fill="#3a9a3a"/>
+        <ellipse cx="155" cy="185" rx="17" ry="11" fill="#3a9a3a"/>
+        <ellipse cx="200" cy="178" rx="19" ry="12" fill="#3a9a3a"/>
+        <ellipse cx="240" cy="182" rx="16" ry="11" fill="#3a9a3a"/>
+        <ellipse cx="165" cy="225" rx="17" ry="11" fill="#3a9a3a"/>
+        <ellipse cx="205" cy="218" rx="19" ry="12" fill="#3a9a3a"/>
+        <ellipse cx="245" cy="222" rx="16" ry="11" fill="#3a9a3a"/>
+        <ellipse cx="175" cy="265" rx="17" ry="11" fill="#3a9a3a"/>
+        <ellipse cx="215" cy="258" rx="19" ry="12" fill="#3a9a3a"/>
+        <ellipse cx="252" cy="262" rx="16" ry="11" fill="#3a9a3a"/>
+        <ellipse cx="162" cy="302" rx="17" ry="11" fill="#3a9a3a"/>
+        <ellipse cx="202" cy="295" rx="19" ry="12" fill="#3a9a3a"/>
+        <ellipse cx="242" cy="299" rx="16" ry="11" fill="#3a9a3a"/>
+      </g>
+      <!-- Palm -->
+      <ellipse cx="200" cy="490" rx="130" ry="90" fill="url(#scaleGrad)"/>
+      <!-- Fingers -->
+      <!-- Thumb -->
+      <path d="M80,460 Q50,430 40,390 Q35,360 55,355 Q75,350 85,375 Q90,400 95,430 Z" fill="url(#scaleGrad)"/>
+      <path d="M40,358 Q30,340 45,330 Q65,325 75,345" fill="url(#clawGrad)" stroke="#6a5a30" stroke-width="1"/>
+      <!-- Index -->
+      <path d="M120,410 Q108,360 110,310 Q112,275 130,270 Q150,268 155,300 Q158,330 150,375 Q140,410 130,425 Z" fill="url(#scaleGrad)"/>
+      <path d="M116,273 Q115,245 132,238 Q152,235 156,260" fill="url(#clawGrad)" stroke="#6a5a30" stroke-width="1"/>
+      <!-- Middle -->
+      <path d="M175,400 Q168,345 172,290 Q175,255 194,250 Q214,248 218,278 Q220,310 215,360 Q210,400 202,418 Z" fill="url(#scaleGrad)"/>
+      <path d="M170,253 Q172,225 192,218 Q213,215 218,242" fill="url(#clawGrad)" stroke="#6a5a30" stroke-width="1"/>
+      <!-- Ring -->
+      <path d="M228,408 Q224,358 228,308 Q232,275 248,272 Q268,270 270,298 Q272,328 266,372 Q258,408 248,422 Z" fill="url(#scaleGrad)"/>
+      <path d="M225,275 Q228,248 247,242 Q268,240 270,265" fill="url(#clawGrad)" stroke="#6a5a30" stroke-width="1"/>
+      <!-- Pinky -->
+      <path d="M278,435 Q278,390 282,350 Q286,320 300,318 Q318,316 318,340 Q318,368 312,400 Q305,430 294,445 Z" fill="url(#scaleGrad)"/>
+      <path d="M282,320 Q284,298 300,292 Q320,290 320,315" fill="url(#clawGrad)" stroke="#6a5a30" stroke-width="1"/>
+      <!-- Knuckle spikes -->
+      <polygon points="120,380 110,355 130,360" fill="#1a4a1a"/>
+      <polygon points="180,368 168,342 188,348" fill="#1a4a1a"/>
+      <polygon points="238,375 226,350 246,356" fill="#1a4a1a"/>
+      <polygon points="288,402 278,378 296,384" fill="#1a4a1a"/>
+      <!-- Glow lines on palm -->
+      <path d="M100,480 Q200,500 300,480" stroke="rgba(100,255,100,.3)" stroke-width="2" fill="none"/>
+      <path d="M110,500 Q200,518 290,500" stroke="rgba(100,255,100,.2)" stroke-width="1.5" fill="none"/>
+    </svg>
+  </div>
+
+  <!-- Capsule -->
+
+  <div class="capsule-wrap hidden" id="capsuleWrap">
+    <svg id="capsuleSvg" viewBox="0 0 120 120" width="140" height="140">
+      <defs>
+        <radialGradient id="capGrad" cx="35%" cy="30%">
+          <stop offset="0%" style="stop-color:#ff8888"/>
+          <stop offset="100%" style="stop-color:#cc0000"/>
+        </radialGradient>
+        <radialGradient id="capGrad2" cx="35%" cy="30%">
+          <stop offset="0%" style="stop-color:#aaaaff"/>
+          <stop offset="100%" style="stop-color:#3333cc"/>
+        </radialGradient>
+      </defs>
+      <circle cx="60" cy="60" r="55" fill="url(#capGrad)" stroke="#ff4444" stroke-width="2"/>
+      <ellipse cx="60" cy="60" rx="55" ry="20" fill="url(#capGrad2)" stroke="#4444ff" stroke-width="2"/>
+      <ellipse cx="42" cy="38" rx="12" ry="7" fill="rgba(255,255,255,.3)" transform="rotate(-30,42,38)"/>
+      <circle cx="60" cy="60" r="54" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="3"/>
+    </svg>
+  </div>
+
+  <!-- Drag hint -->
+
+  <div class="drag-hint" id="dragHint">
+    <span class="hint-arrow">⬇</span>
+    <span class="hint-label">画面をタップして召喚せよ！</span>
+  </div>
+
+  <!-- Tease overlay -->
+
+  <div id="teaseOverlay">
+    <div class="tease-text" id="teaseText">？？？</div>
+    <div class="tease-msg" id="teaseMsg"></div>
+    <div class="tease-sub" id="teaseSub"></div>
+  </div>
+</div>
+
+<!-- ===== CARD SCREEN ===== -->
+
+<div class="screen hidden" id="cardScreen">
+  <div id="cardBg" style="position:absolute;inset:0;"></div>
+  <div class="card-container" id="cardContainer"></div>
+</div>
+
+<!-- ===== MINI GAME SCREEN ===== -->
+
+<div class="screen hidden" id="miniScreen">
+  <div class="field-wrap">
+    <canvas id="snowCanvas"></canvas>
+    <canvas id="percentCanvas"></canvas>
+    <div class="walker" id="walker"></div>
+    <div class="mini-ui">
+      <div class="tap-counter" id="tapCounter">⏱ 5.0s　タップ: 0 / 20</div>
+      <button class="quit-btn" onclick="quitMini()">やめる</button>
+    </div>
+    <div style="position:absolute;bottom:20px;left:0;right:0;text-align:center;z-index:20;">
+      <div style="background:rgba(0,0,0,.6);color:#fff;display:inline-block;padding:8px 20px;border-radius:16px;font-size:.9rem;">
+        ⛄ 5秒以内に20回タップして「ありがとう」を書け！
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Clear Overlay -->
+
+<div class="result-overlay" id="clearOverlay">
+  <div class="result-title">🎉 クリア！</div>
+  <div class="result-msg">足跡で「ありがとう」と書けました！<br>感動的な雪のメッセージですね…</div>
+  <button class="replay-btn" onclick="restartAll()">もう一度ガチャを回す</button>
+</div>
+
+<!-- Fail Overlay -->
+
+<div class="result-overlay" id="failOverlay">
+  <div class="result-title">💀 失敗…</div>
+  <div class="result-msg" id="failMsg"></div>
+  <div id="angryTeacher" style="display:none;" class="angry-teacher">
+    <div class="speech-bubble">校庭にあんなもの描いたのは誰ダァ！？</div>
+    <div id="angryTeacherSvg"></div>
+  </div>
+  <button class="replay-btn" style="margin-top:24px;" onclick="restartAll()">もう一度ガチャを回す</button>
+</div>
+
 <script>
-const GAME_W=390, GAME_H=700;
-const canvas=document.getElementById('gameCanvas');
-const ctx=canvas.getContext('2d');
-let scale=1;
-
-function resizeCanvas(){
-const vw=window.innerWidth, vh=window.innerHeight;
-scale=Math.min(vw/GAME_W, vh/GAME_H);
-canvas.style.width=(GAME_W*scale)+‘px’;
-canvas.style.height=(GAME_H*scale)+‘px’;
-canvas.width=GAME_W; canvas.height=GAME_H;
-}
-resizeCanvas();
-window.addEventListener(‘resize’,resizeCanvas);
-
-const isTouch=(‘ontouchstart’ in window)||(navigator.maxTouchPoints>0);
-if(isTouch) document.getElementById(‘controller’).style.display=‘block’;
-
-let state=‘title’, score=0, hiScore=0, frameCount=0;
-const player={x:GAME_W/2,y:GAME_H-110,w:64,h:48,speed:4.5,shootCooldown:0,shootRate:8,invincible:0};
-
-// キーボード
-const keys={};
-document.addEventListener(‘keydown’,e=>{
-keys[e.code]=true;
-if(e.code===‘Space’){if(state===‘title’||state===‘gameover’)startGame();e.preventDefault();}
-if([‘ArrowLeft’,‘ArrowRight’,‘ArrowUp’,‘ArrowDown’].includes(e.code))e.preventDefault();
-});
-document.addEventListener(‘keyup’,e=>{keys[e.code]=false;});
-
-// タップでスタート
-canvas.addEventListener(‘touchstart’,e=>{e.preventDefault();if(state===‘title’||state===‘gameover’)startGame();},{passive:false});
-document.addEventListener(‘touchmove’,e=>e.preventDefault(),{passive:false});
-
-// スティック
-const stickArea=document.getElementById(‘stick-area’);
-const stickKnob=document.getElementById(‘stick-knob’);
-const shootBtn=document.getElementById(‘shoot-btn’);
-const stick={x:0,y:0,active:false,id:null};
-const KNOB_MAX=40;
-
-stickArea.addEventListener(‘touchstart’,e=>{
-e.preventDefault();
-const t=e.changedTouches[0];
-stick.id=t.identifier; stick.active=true;
-updateStick(t.clientX,t.clientY);
-},{passive:false});
-document.addEventListener(‘touchmove’,e=>{
-for(const t of e.changedTouches) if(t.identifier===stick.id) updateStick(t.clientX,t.clientY);
-},{passive:false});
-document.addEventListener(‘touchend’,e=>{
-for(const t of e.changedTouches) if(t.identifier===stick.id){
-stick.x=0;stick.y=0;stick.active=false;stick.id=null;
-stickKnob.style.transform=‘translate(-50%,-50%)’;
-}
-},{passive:false});
-
-function updateStick(cx,cy){
-const rect=stickArea.getBoundingClientRect();
-const ox=rect.left+rect.width/2, oy=rect.top+rect.height/2;
-let dx=cx-ox, dy=cy-oy;
-const dist=Math.sqrt(dx*dx+dy*dy);
-stick.x=dist>0?dx/Math.max(dist,60):0;
-stick.y=dist>0?dy/Math.max(dist,60):0;
-const nx=Math.max(-KNOB_MAX,Math.min(KNOB_MAX,dx));
-const ny=Math.max(-KNOB_MAX,Math.min(KNOB_MAX,dy));
-stickKnob.style.transform=`translate(calc(-50% + ${nx}px),calc(-50% + ${ny}px))`;
-}
-
-// 射撃ボタン
-let shootPressed=false;
-shootBtn.addEventListener(‘touchstart’,e=>{e.preventDefault();shootPressed=true;shootBtn.classList.add(‘pressed’);if(state===‘title’||state===‘gameover’)startGame();},{passive:false});
-shootBtn.addEventListener(‘touchend’,e=>{e.preventDefault();shootPressed=false;shootBtn.classList.remove(‘pressed’);},{passive:false});
-
-// 弾
-let bullets=[];
-function spawnBullet(){
-bullets.push({x:player.x-10,y:player.y-10,vy:-12});
-bullets.push({x:player.x+10,y:player.y-10,vy:-12});
-}
-function drawBullet(b){
-ctx.save();
-const rx=4,ry=7;
-const g=ctx.createRadialGradient(b.x-1,b.y-2,0,b.x,b.y,ry);
-g.addColorStop(0,‘rgba(255,255,255,1)’);g.addColorStop(0.5,‘rgba(200,230,255,0.9)’);g.addColorStop(1,‘rgba(100,180,255,0.4)’);
-ctx.beginPath();ctx.ellipse(b.x,b.y,rx,ry,0,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
-ctx.beginPath();ctx.ellipse(b.x-1,b.y-3,1.5,2.5,0,0,Math.PI*2);ctx.fillStyle=‘rgba(255,255,255,0.9)’;ctx.fill();
-ctx.beginPath();ctx.moveTo(b.x-2,b.y+ry);ctx.lineTo(b.x,b.y+ry+8);ctx.lineTo(b.x+2,b.y+ry);
-ctx.fillStyle=‘rgba(180,220,255,0.3)’;ctx.fill();
-ctx.restore();
-}
-
-// なめこドット絵
-const NP=[‘transparent’,’#C47A28’,’#8B4E10’,’#E8A84A’,’#F5EDD4’,’#D4C4A0’,’#1A1A1A’,‘rgba(255,255,200,0.7)’,’#7A3A08’];
-const ND=[
-[0,0,0,0,0,0,3,3,3,3,0,0,0,0,0,0],[0,0,0,0,3,3,1,1,1,1,3,3,0,0,0,0],
-[0,0,0,3,1,1,1,3,3,1,1,1,3,0,0,0],[0,0,3,1,1,3,3,3,3,3,3,1,1,3,0,0],
-[0,3,1,1,3,3,3,1,1,3,3,3,1,1,3,0],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],
-[0,1,2,2,1,1,1,1,1,1,1,1,2,2,1,0],[0,8,2,2,2,2,2,2,2,2,2,2,2,2,8,0],
-[0,0,0,5,4,4,7,4,4,7,4,4,5,0,0,0],[0,0,0,5,4,6,6,4,4,6,6,4,5,0,0,0],
-[0,0,0,5,4,6,6,4,4,6,6,4,5,0,0,0],[0,0,0,5,4,4,4,4,4,4,4,4,5,0,0,0],
-[0,0,0,5,4,4,7,4,4,7,4,4,5,0,0,0],[0,0,0,0,5,5,5,5,5,5,5,5,0,0,0,0],
-[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+// =============================================
+// DATA
+// =============================================
+const CHARS = [
+  {
+    id:'tamura', name:'田村航大', rarity:'vr',
+    serif:null,
+    svg:`<svg viewBox="0 0 100 120" width="110" height="130" xmlns="http://www.w3.org/2000/svg">
+      <!-- body -->
+      <rect x="28" y="70" width="44" height="45" rx="6" fill="#1a3a6a"/>
+      <!-- neck -->
+      <rect x="42" y="60" width="16" height="14" rx="3" fill="#f5c8a0"/>
+      <!-- head -->
+      <ellipse cx="50" cy="45" rx="26" ry="27" fill="#f5c8a0"/>
+      <!-- gold glasses -->
+      <rect x="28" y="42" width="18" height="10" rx="5" fill="none" stroke="#FFD700" stroke-width="2.5"/>
+      <rect x="54" y="42" width="18" height="10" rx="5" fill="none" stroke="#FFD700" stroke-width="2.5"/>
+      <line x1="46" y1="46" x2="54" y2="46" stroke="#FFD700" stroke-width="2"/>
+      <line x1="28" y1="46" x2="22" y2="49" stroke="#FFD700" stroke-width="2"/>
+      <line x1="72" y1="46" x2="78" y2="49" stroke="#FFD700" stroke-width="2"/>
+      <!-- eyes behind glasses -->
+      <ellipse cx="37" cy="46" rx="4" ry="4" fill="#1a1a1a"/>
+      <ellipse cx="63" cy="46" rx="4" ry="4" fill="#1a1a1a"/>
+      <circle cx="38" cy="45" r="1.2" fill="white"/>
+      <circle cx="64" cy="45" r="1.2" fill="white"/>
+      <!-- hair -->
+      <ellipse cx="50" cy="22" rx="26" ry="10" fill="#2a1a0a"/>
+      <rect x="24" y="22" width="52" height="12" fill="#2a1a0a"/>
+      <!-- eyebrows -->
+      <path d="M30 39 Q37 36 44 39" stroke="#2a1a0a" stroke-width="1.8" fill="none"/>
+      <path d="M56 39 Q63 36 70 39" stroke="#2a1a0a" stroke-width="1.8" fill="none"/>
+      <!-- nose -->
+      <ellipse cx="50" cy="52" rx="3" ry="2" fill="#e0a878"/>
+      <!-- smile -->
+      <path d="M42 59 Q50 65 58 59" stroke="#c07050" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <!-- collar -->
+      <polygon points="40,70 50,82 60,70 55,70 50,76 45,70" fill="#fff"/>
+      <!-- star badge -->
+      <polygon points="75,72 77,78 83,78 78,82 80,88 75,84 70,88 72,82 67,78 73,78" fill="#FFD700"/>
+    </svg>`
+  },
+  {
+    id:'kawamura', name:'河村優里', rarity:'sr',
+    serif:null,
+    svg:`<svg viewBox="0 0 100 120" width="110" height="130" xmlns="http://www.w3.org/2000/svg">
+      <rect x="26" y="68" width="48" height="47" rx="6" fill="#cc3366"/>
+      <rect x="41" y="58" width="18" height="14" rx="3" fill="#f5c8a0"/>
+      <ellipse cx="50" cy="42" rx="25" ry="27" fill="#f5c8a0"/>
+      <!-- long black hair -->
+      <ellipse cx="50" cy="20" rx="26" ry="11" fill="#1a1010"/>
+      <rect x="24" y="20" width="10" height="65" rx="5" fill="#1a1010"/>
+      <rect x="66" y="20" width="10" height="65" rx="5" fill="#1a1010"/>
+      <rect x="24" y="20" width="52" height="16" fill="#1a1010"/>
+      <!-- eyes -->
+      <ellipse cx="38" cy="42" rx="6" ry="6" fill="white"/>
+      <ellipse cx="62" cy="42" rx="6" ry="6" fill="white"/>
+      <ellipse cx="38" cy="43" rx="4" ry="4" fill="#1a1a1a"/>
+      <ellipse cx="62" cy="43" rx="4" ry="4" fill="#1a1a1a"/>
+      <circle cx="39" cy="41" r="1.3" fill="white"/>
+      <circle cx="63" cy="41" r="1.3" fill="white"/>
+      <!-- eyelashes -->
+      <path d="M32 38 Q38 35 44 38" stroke="#1a1010" stroke-width="1.5" fill="none"/>
+      <path d="M56 38 Q62 35 68 38" stroke="#1a1010" stroke-width="1.5" fill="none"/>
+      <ellipse cx="30" cy="50" rx="7" ry="4" fill="#ffb6c1" opacity=".5"/>
+      <ellipse cx="70" cy="50" rx="7" ry="4" fill="#ffb6c1" opacity=".5"/>
+      <ellipse cx="50" cy="52" rx="3" ry="2" fill="#e0a878"/>
+      <path d="M42 58 Q50 64 58 58" stroke="#cc6688" stroke-width="2" fill="none"/>
+    </svg>`
+  },
+  {
+    id:'watanabe', name:'渡邊理那', rarity:'sr',
+    serif:null,
+    svg:`<svg viewBox="0 0 100 120" width="110" height="130" xmlns="http://www.w3.org/2000/svg">
+      <rect x="26" y="68" width="48" height="47" rx="6" fill="#9966cc"/>
+      <rect x="41" y="58" width="18" height="14" rx="3" fill="#f5c8a0"/>
+      <ellipse cx="50" cy="42" rx="25" ry="27" fill="#f5c8a0"/>
+      <!-- short hair -->
+      <ellipse cx="50" cy="20" rx="26" ry="11" fill="#3a2a1a"/>
+      <rect x="24" y="20" width="52" height="14" fill="#3a2a1a"/>
+      <ellipse cx="26" cy="34" rx="5" ry="12" fill="#3a2a1a"/>
+      <ellipse cx="74" cy="34" rx="5" ry="12" fill="#3a2a1a"/>
+      <!-- pink glasses -->
+      <rect x="26" y="39" width="19" height="11" rx="5" fill="rgba(255,100,180,.3)" stroke="#ff69b4" stroke-width="2.5"/>
+      <rect x="55" y="39" width="19" height="11" rx="5" fill="rgba(255,100,180,.3)" stroke="#ff69b4" stroke-width="2.5"/>
+      <line x1="45" y1="44" x2="55" y2="44" stroke="#ff69b4" stroke-width="2"/>
+      <line x1="26" y1="44" x2="20" y2="47" stroke="#ff69b4" stroke-width="2"/>
+      <line x1="74" y1="44" x2="80" y2="47" stroke="#ff69b4" stroke-width="2"/>
+      <ellipse cx="35" cy="44" rx="4" ry="4" fill="#3a3a1a"/>
+      <ellipse cx="64" cy="44" rx="4" ry="4" fill="#3a3a1a"/>
+      <circle cx="36" cy="43" r="1.2" fill="white"/>
+      <circle cx="65" cy="43" r="1.2" fill="white"/>
+      <ellipse cx="50" cy="53" rx="3" ry="2" fill="#e0a878"/>
+      <path d="M42 59 Q50 65 58 59" stroke="#cc6688" stroke-width="2" fill="none"/>
+    </svg>`
+  },
+  {
+    id:'hoshino_m', name:'星野百香', rarity:'sr',
+    serif:'え、かいぃのくさぁいw',
+    svg:`<svg viewBox="0 0 100 120" width="110" height="130" xmlns="http://www.w3.org/2000/svg">
+      <rect x="26" y="68" width="48" height="47" rx="6" fill="#ff9933"/>
+      <rect x="41" y="58" width="18" height="14" rx="3" fill="#f5c8a0"/>
+      <ellipse cx="50" cy="42" rx="25" ry="27" fill="#f5c8a0"/>
+      <!-- long hair -->
+      <ellipse cx="50" cy="20" rx="26" ry="11" fill="#4a3020"/>
+      <rect x="24" y="20" width="52" height="14" fill="#4a3020"/>
+      <rect x="24" y="24" width="8" height="60" rx="4" fill="#4a3020"/>
+      <rect x="68" y="24" width="8" height="60" rx="4" fill="#4a3020"/>
+      <!-- narrow eyes -->
+      <path d="M30 42 Q38 38 46 42" stroke="#1a1a1a" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <path d="M54 42 Q62 38 70 42" stroke="#1a1a1a" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <ellipse cx="50" cy="53" rx="3" ry="2" fill="#e0a878"/>
+      <path d="M40 59 Q50 66 60 59" stroke="#cc7050" stroke-width="2" fill="none"/>
+    </svg>`
+  },
+  {
+    id:'ohashi', name:'大橋史信', rarity:'sr',
+    serif:null,
+    svg:`<svg viewBox="0 0 100 120" width="110" height="130" xmlns="http://www.w3.org/2000/svg">
+      <!-- chubby body -->
+      <ellipse cx="50" cy="88" rx="38" ry="30" fill="#111111"/>
+      <!-- black t-shirt "0258" -->
+      <text x="50" y="94" text-anchor="middle" font-size="14" font-weight="900" fill="white" font-family="monospace">0258</text>
+      <rect x="40" y="60" width="20" height="16" rx="3" fill="#f0b888"/>
+      <!-- fat head -->
+      <ellipse cx="50" cy="40" rx="30" ry="30" fill="#f0b888"/>
+      <!-- short hair -->
+      <ellipse cx="50" cy="16" rx="30" ry="12" fill="#1a1010"/>
+      <rect x="20" y="16" width="60" height="14" fill="#1a1010"/>
+      <ellipse cx="22" cy="30" rx="5" ry="10" fill="#1a1010"/>
+      <ellipse cx="78" cy="30" rx="5" ry="10" fill="#1a1010"/>
+      <!-- chubby cheeks -->
+      <ellipse cx="22" cy="45" rx="8" ry="6" fill="#e8a070" opacity=".6"/>
+      <ellipse cx="78" cy="45" rx="8" ry="6" fill="#e8a070" opacity=".6"/>
+      <ellipse cx="36" cy="42" rx="5" ry="5" fill="#1a1a1a"/>
+      <ellipse cx="64" cy="42" rx="5" ry="5" fill="#1a1a1a"/>
+      <circle cx="37" cy="40" r="1.5" fill="white"/>
+      <circle cx="65" cy="40" r="1.5" fill="white"/>
+      <ellipse cx="50" cy="50" rx="4" ry="3" fill="#d8906a"/>
+      <path d="M39 57 Q50 64 61 57" stroke="#b06040" stroke-width="2.5" fill="none"/>
+    </svg>`
+  },
+  {
+    id:'takeishi', name:'竹石快', rarity:'sr',
+    serif:null,
+    svg:`<svg viewBox="0 0 100 120" width="110" height="130" xmlns="http://www.w3.org/2000/svg">
+      <rect x="26" y="68" width="48" height="47" rx="6" fill="#333"/>
+      <rect x="41" y="58" width="18" height="14" rx="3" fill="#f5c8a0"/>
+      <ellipse cx="50" cy="42" rx="24" ry="25" fill="#f5c8a0"/>
+      <!-- afro -->
+      <ellipse cx="50" cy="22" rx="34" ry="26" fill="#1a1010"/>
+      <ellipse cx="28" cy="30" rx="16" ry="18" fill="#1a1010"/>
+      <ellipse cx="72" cy="30" rx="16" ry="18" fill="#1a1010"/>
+      <ellipse cx="50" cy="18" rx="22" ry="14" fill="#1a1010"/>
+      <!-- face -->
+      <ellipse cx="37" cy="43" rx="5" ry="5" fill="#1a1a1a"/>
+      <ellipse cx="63" cy="43" rx="5" ry="5" fill="#1a1a1a"/>
+      <circle cx="38" cy="41" r="1.5" fill="white"/>
+      <circle cx="64" cy="41" r="1.5" fill="white"/>
+      <ellipse cx="50" cy="52" rx="3" ry="2" fill="#e0a878"/>
+      <path d="M41 58 Q50 64 59 58" stroke="#c07050" stroke-width="2" fill="none"/>
+      <!-- skateboard -->
+      <rect x="55" y="78" width="38" height="10" rx="4" fill="#cc6600" transform="rotate(-20,55,78)"/>
+      <circle cx="58" cy="90" r="3" fill="#333"/>
+      <circle cx="84" cy="82" r="3" fill="#333"/>
+      <!-- arm holding board -->
+      <rect x="60" y="70" width="8" height="22" rx="4" fill="#f5c8a0" transform="rotate(-20,60,70)"/>
+    </svg>`
+  },
+  // ---- COMMONS ----
+  {
+    id:'matsumoto', name:'松本稜太朗', rarity:'c',
+    serif:null,
+    svg:`<svg viewBox="0 0 100 120" width="100" height="120" xmlns="http://www.w3.org/2000/svg">
+      <!-- monkey body -->
+      <ellipse cx="50" cy="85" rx="28" ry="28" fill="#8B6914"/>
+      <!-- monkey head -->
+      <ellipse cx="50" cy="42" rx="26" ry="26" fill="#8B6914"/>
+      <ellipse cx="50" cy="52" rx="18" ry="14" fill="#d4a574"/>
+      <!-- monkey ears -->
+      <ellipse cx="24" cy="40" rx="8" ry="10" fill="#8B6914"/>
+      <ellipse cx="76" cy="40" rx="8" ry="10" fill="#8B6914"/>
+      <ellipse cx="24" cy="40" rx="5" ry="7" fill="#d4a574"/>
+      <ellipse cx="76" cy="40" rx="5" ry="7" fill="#d4a574"/>
+      <!-- eyes -->
+      <ellipse cx="38" cy="38" rx="5" ry="5" fill="#1a1a1a"/>
+      <ellipse cx="62" cy="38" rx="5" ry="5" fill="#1a1a1a"/>
+      <circle cx="39" cy="37" r="1.5" fill="white"/>
+      <circle cx="63" cy="37" r="1.5" fill="white"/>
+      <!-- nostrils -->
+      <ellipse cx="45" cy="50" rx="3" ry="2" fill="#5a3a0a"/>
+      <ellipse cx="55" cy="50" rx="3" ry="2" fill="#5a3a0a"/>
+      <!-- mouth -->
+      <path d="M40 56 Q50 62 60 56" stroke="#5a3a0a" stroke-width="2" fill="none"/>
+      <!-- fish in left hand -->
+      <ellipse cx="18" cy="88" rx="12" ry="6" fill="#4488cc" transform="rotate(-20,18,88)"/>
+      <polygon points="6,84 2,78 6,90" fill="#3366aa"/>
+      <!-- DJ disc in right hand -->
+      <circle cx="82" cy="88" r="10" fill="#111"/>
+      <circle cx="82" cy="88" r="4" fill="#333"/>
+      <circle cx="82" cy="88" r="1.5" fill="#888"/>
+      <ellipse cx="82" cy="88" rx="10" ry="10" fill="none" stroke="#555" stroke-width="1"/>
+    </svg>`
+  },
+  {
+    id:'nakazawa', name:'中沢承希', rarity:'c',
+    serif:null,
+    svg:`<svg viewBox="0 0 100 120" width="100" height="120" xmlns="http://www.w3.org/2000/svg">
+      <!-- chicken body -->
+      <ellipse cx="50" cy="85" rx="28" ry="25" fill="#cc4400"/>
+      <!-- human face on chicken -->
+      <ellipse cx="50" cy="42" rx="24" ry="26" fill="#f5c8a0"/>
+      <!-- red comb -->
+      <ellipse cx="36" cy="20" rx="6" ry="10" fill="#cc0000"/>
+      <ellipse cx="50" cy="16" rx="6" ry="10" fill="#cc0000"/>
+      <ellipse cx="64" cy="20" rx="6" ry="10" fill="#cc0000"/>
+      <!-- beak -->
+      <polygon points="42,53 50,58 58,53 50,48" fill="#ffaa00"/>
+      <!-- eyes -->
+      <ellipse cx="36" cy="40" rx="6" ry="6" fill="white"/>
+      <ellipse cx="64" cy="40" rx="6" ry="6" fill="white"/>
+      <ellipse cx="36" cy="40" rx="3.5" ry="3.5" fill="#cc4400"/>
+      <ellipse cx="64" cy="40" rx="3.5" ry="3.5" fill="#cc4400"/>
+      <circle cx="37" cy="39" r="1.2" fill="white"/>
+      <circle cx="65" cy="39" r="1.2" fill="white"/>
+      <!-- wings as arms, looking tough -->
+      <path d="M22,75 Q15,65 18,55 Q22,48 30,52 Q35,60 30,75" fill="#aa3300"/>
+      <path d="M78,75 Q85,65 82,55 Q78,48 70,52 Q65,60 70,75" fill="#aa3300"/>
+      <!-- pompadour/yankee hair -->
+      <ellipse cx="50" cy="22" rx="26" ry="10" fill="#1a1010"/>
+      <rect x="24" y="22" width="52" height="10" fill="#1a1010"/>
+      <ellipse cx="50" cy="14" rx="18" ry="8" fill="#1a1010"/>
+      <!-- wattle -->
+      <ellipse cx="50" cy="62" rx="8" ry="6" fill="#cc0000"/>
+    </svg>`
+  },
+  {
+    id:'murakami', name:'村上正之輔', rarity:'c',
+    serif:null,
+    svg:`<svg viewBox="0 0 100 120" width="100" height="120" xmlns="http://www.w3.org/2000/svg">
+      <rect x="28" y="68" width="44" height="47" rx="6" fill="#cc3333"/>
+      <rect x="41" y="58" width="18" height="14" rx="3" fill="#f5c8a0"/>
+      <ellipse cx="50" cy="42" rx="24" ry="26" fill="#f5c8a0"/>
+      <ellipse cx="50" cy="20" rx="24" ry="10" fill="#3a2a1a"/>
+      <rect x="26" y="20" width="48" height="12" fill="#3a2a1a"/>
+      <ellipse cx="37" cy="41" rx="5" ry="5" fill="#2a2a2a"/>
+      <ellipse cx="63" cy="41" rx="5" ry="5" fill="#2a2a2a"/>
+      <circle cx="38" cy="39" r="1.5" fill="white"/>
+      <circle cx="64" cy="39" r="1.5" fill="white"/>
+      <ellipse cx="50" cy="52" rx="3" ry="2" fill="#e0a878"/>
+      <path d="M41 58 Q50 64 59 58" stroke="#c07050" stroke-width="2" fill="none"/>
+      <!-- Vietnam flag -->
+      <rect x="58" y="72" width="36" height="24" fill="#da251d" rx="2"/>
+      <polygon points="76,76 78,82 84,82 79,86 81,92 76,88 71,92 73,86 68,82 74,82" fill="#ffff00"/>
+      <!-- flagpole -->
+      <rect x="56" y="68" width="3" height="30" fill="#888"/>
+    </svg>`
+  },
+  {
+    id:'inoue_y', name:'井上侑士', rarity:'c',
+    serif:null,
+    svg:`<svg viewBox="0 0 100 120" width="100" height="120" xmlns="http://www.w3.org/2000/svg">
+      <rect x="28" y="68" width="44" height="47" rx="6" fill="#1a1a3a"/>
+      <rect x="41" y="58" width="18" height="14" rx="3" fill="#f5c8a0"/>
+      <ellipse cx="50" cy="42" rx="24" ry="26" fill="#f5c8a0"/>
+      <ellipse cx="50" cy="20" rx="24" ry="10" fill="#1a1010"/>
+      <rect x="26" y="20" width="48" height="12" fill="#1a1010"/>
+      <ellipse cx="37" cy="41" rx="5" ry="5" fill="#1a1a1a"/>
+      <ellipse cx="63" cy="41" rx="5" ry="5" fill="#1a1a1a"/>
+      <circle cx="38" cy="39" r="1.5" fill="white"/>
+      <circle cx="64" cy="39" r="1.5" fill="white"/>
+      <ellipse cx="50" cy="52" rx="3" ry="2" fill="#e0a878"/>
+      <path d="M41 58 Q50 64 59 58" stroke="#c07050" stroke-width="2" fill="none"/>
+      <!-- 3 lightning bolts -->
+      <polygon points="10,30 15,50 20,50 14,75 25,48 20,48 26,30" fill="#FFD700" opacity=".9"/>
+      <polygon points="42,10 47,30 52,30 46,55 57,28 52,28 58,10" fill="#FFD700"/>
+      <polygon points="74,30 79,50 84,50 78,75 89,48 84,48 90,30" fill="#FFD700" opacity=".9"/>
+    </svg>`
+  },
+  {
+    id:'ikeyama', name:'池山丈登', rarity:'c',
+    serif:null,
+    svg:`<svg viewBox="0 0 100 120" width="100" height="120" xmlns="http://www.w3.org/2000/svg">
+      <!-- granny body -->
+      <ellipse cx="50" cy="90" rx="28" ry="25" fill="#8855aa"/>
+      <!-- white hair -->
+      <ellipse cx="50" cy="40" rx="24" ry="26" fill="#f5c8a0"/>
+      <ellipse cx="50" cy="18" rx="26" ry="13" fill="#eeeeee"/>
+      <rect x="24" y="18" width="52" height="14" fill="#eeeeee"/>
+      <ellipse cx="24" cy="32" rx="6" ry="14" fill="#eeeeee"/>
+      <ellipse cx="76" cy="32" rx="6" ry="14" fill="#eeeeee"/>
+      <!-- wrinkles -->
+      <path d="M32 50 Q36 48 40 50" stroke="#d4906a" stroke-width="1" fill="none"/>
+      <path d="M60 50 Q64 48 68 50" stroke="#d4906a" stroke-width="1" fill="none"/>
+      <path d="M38 35 Q44 32 50 35 Q56 32 62 35" stroke="#d4906a" stroke-width="1" fill="none"/>
+      <!-- eyes -->
+      <path d="M34 40 Q38 37 42 40" stroke="#1a1a1a" stroke-width="2" fill="none"/>
+      <path d="M58 40 Q62 37 66 40" stroke="#1a1a1a" stroke-width="2" fill="none"/>
+      <ellipse cx="50" cy="52" rx="3" ry="2" fill="#d4906a"/>
+      <!-- grandma smile -->
+      <path d="M40 58 Q50 66 60 58" stroke="#b06040" stroke-width="2.5" fill="none"/>
+      <!-- walking stick -->
+      <rect x="72" y="70" width="4" height="48" rx="2" fill="#8B5A2B"/>
+      <ellipse cx="74" cy="70" rx="6" ry="4" fill="#6B3A0B"/>
+    </svg>`
+  },
+  {
+    id:'sakaue', name:'坂上陽向', rarity:'c',
+    serif:null,
+    svg:`<svg viewBox="0 0 100 120" width="100" height="120" xmlns="http://www.w3.org/2000/svg">
+      <rect x="28" y="68" width="44" height="47" rx="6" fill="#cc0000"/>
+      <rect x="41" y="58" width="18" height="14" rx="3" fill="#f5c8a0"/>
+      <ellipse cx="50" cy="42" rx="24" ry="26" fill="#f5c8a0"/>
+      <ellipse cx="50" cy="20" rx="24" ry="10" fill="#3a2010"/>
+      <rect x="26" y="20" width="48" height="12" fill="#3a2010"/>
+      <ellipse cx="37" cy="41" rx="5" ry="5" fill="#2a2a2a"/>
+      <ellipse cx="63" cy="41" rx="5" ry="5" fill="#2a2a2a"/>
+      <circle cx="38" cy="39" r="1.5" fill="white"/>
+      <circle cx="64" cy="39" r="1.5" fill="white"/>
+      <ellipse cx="50" cy="52" rx="3" ry="2" fill="#e0a878"/>
+      <path d="M41 58 Q50 64 59 58" stroke="#c07050" stroke-width="2" fill="none"/>
+      <!-- Canada flag on shirt -->
+      <rect x="30" y="72" width="18" height="12" fill="#ff0000" rx="2"/>
+      <rect x="35" y="72" width="8" height="12" fill="white"/>
+      <text x="39" y="81" text-anchor="middle" font-size="8" fill="#ff0000">🍁</text>
+      <!-- UNIQLO badge -->
+      <rect x="52" y="72" width="18" height="12" fill="#cc0000" rx="2"/>
+      <text x="61" y="81" text-anchor="middle" font-size="5.5" fill="white" font-weight="900">UNIQLO</text>
+    </svg>`
+  },
+  {
+    id:'sato', name:'佐藤桂太', rarity:'c',
+    serif:null,
+    svg:`<svg viewBox="0 0 100 120" width="100" height="120" xmlns="http://www.w3.org/2000/svg">
+      <!-- torn clothes -->
+      <ellipse cx="50" cy="88" rx="28" ry="27" fill="#885522"/>
+      <!-- ripped shirt detail -->
+      <path d="M28,75 Q35,72 42,75 Q40,80 35,82 Q30,80 28,75" fill="#664411"/>
+      <path d="M58,74 Q65,71 72,74 Q70,79 65,81 Q60,79 58,74" fill="#664411"/>
+      <rect x="41" y="58" width="18" height="14" rx="3" fill="#e8b080"/>
+      <ellipse cx="50" cy="42" rx="24" ry="26" fill="#e8b080"/>
+      <!-- messy hair -->
+      <ellipse cx="50" cy="20" rx="24" ry="10" fill="#4a3010"/>
+      <rect x="26" y="20" width="48" height="12" fill="#4a3010"/>
+      <path d="M26,20 Q20,15 24,10" stroke="#4a3010" stroke-width="4" fill="none"/>
+      <path d="M74,20 Q80,12 76,8" stroke="#4a3010" stroke-width="3" fill="none"/>
+      <path d="M50,16 Q55,8 58,12" stroke="#4a3010" stroke-width="3" fill="none"/>
+      <!-- sad eyes -->
+      <path d="M34 40 Q38 43 42 40" stroke="#2a2a2a" stroke-width="2" fill="none"/>
+      <path d="M58 40 Q62 43 66 40" stroke="#2a2a2a" stroke-width="2" fill="none"/>
+      <ellipse cx="50" cy="52" rx="3" ry="2" fill="#d49060"/>
+      <path d="M40 59 Q50 58 60 59" stroke="#8a5030" stroke-width="2" fill="none"/>
+      <!-- coin purse empty -->
+      <ellipse cx="20" cy="90" rx="10" ry="8" fill="#8B5A2B"/>
+      <text x="20" y="94" text-anchor="middle" font-size="10" fill="#664411">¥0</text>
+    </svg>`
+  },
+  {
+    id:'kurashige', name:'倉重太一', rarity:'c',
+    serif:null,
+    svg:`<svg viewBox="0 0 100 120" width="100" height="120" xmlns="http://www.w3.org/2000/svg">
+      <!-- white coat -->
+      <rect x="22" y="66" width="56" height="49" rx="6" fill="white" stroke="#ddd" stroke-width="1"/>
+      <rect x="44" y="66" width="12" height="20" fill="#88aaff"/>
+      <rect x="41" y="56" width="18" height="14" rx="3" fill="#f5c8a0"/>
+      <ellipse cx="50" cy="40" rx="24" ry="26" fill="#f5c8a0"/>
+      <ellipse cx="50" cy="18" rx="24" ry="10" fill="#2a2a2a"/>
+      <rect x="26" y="18" width="48" height="12" fill="#2a2a2a"/>
+      <!-- glasses -->
+      <rect x="28" y="37" width="17" height="10" rx="5" fill="none" stroke="#333" stroke-width="2"/>
+      <rect x="55" y="37" width="17" height="10" rx="5" fill="none" stroke="#333" stroke-width="2"/>
+      <line x1="45" y1="42" x2="55" y2="42" stroke="#333" stroke-width="2"/>
+      <ellipse cx="36" cy="42" rx="4" ry="4" fill="#2a2a2a"/>
+      <ellipse cx="63" cy="42" rx="4" ry="4" fill="#2a2a2a"/>
+      <circle cx="37" cy="41" r="1.2" fill="white"/>
+      <circle cx="64" cy="41" r="1.2" fill="white"/>
+      <ellipse cx="50" cy="51" rx="3" ry="2" fill="#e0a878"/>
+      <path d="M42 57 Q50 63 58 57" stroke="#c07050" stroke-width="2" fill="none"/>
+      <!-- clipboard -->
+      <rect x="64" y="76" width="18" height="22" rx="2" fill="#f0e8d0" stroke="#ccc" stroke-width="1"/>
+      <rect x="66" y="79" width="14" height="2" fill="#888"/>
+      <rect x="66" y="83" width="14" height="2" fill="#888"/>
+      <rect x="66" y="87" width="10" height="2" fill="#888"/>
+    </svg>`
+  },
+  {
+    id:'saito_a', name:'斎藤葵', rarity:'c',
+    serif:null,
+    svg:`<svg viewBox="0 0 100 120" width="100" height="120" xmlns="http://www.w3.org/2000/svg">
+      <rect x="26" y="68" width="48" height="47" rx="6" fill="#ff6699"/>
+      <rect x="41" y="58" width="18" height="14" rx="3" fill="#f5c8a0"/>
+      <ellipse cx="50" cy="42" rx="24" ry="26" fill="#f5c8a0"/>
+      <ellipse cx="50" cy="20" rx="24" ry="10" fill="#3a2010"/>
+      <rect x="26" y="20" width="48" height="12" fill="#3a2010"/>
+      <ellipse cx="37" cy="40" rx="5" ry="5" fill="#1a1a1a"/>
+      <ellipse cx="63" cy="40" rx="5" ry="5" fill="#1a1a1a"/>
+      <circle cx="38" cy="38" r="1.5" fill="white"/>
+      <circle cx="64" cy="38" r="1.5" fill="white"/>
+      <ellipse cx="27" cy="50" rx="8" ry="5" fill="#ffb6c1" opacity=".6"/>
+      <ellipse cx="73" cy="50" rx="8" ry="5" fill="#ffb6c1" opacity=".6"/>
+      <!-- BIG smile showing gums -->
+      <path d="M33 56 Q50 72 67 56" stroke="#c07050" stroke-width="2.5" fill="#ff9999"/>
+      <!-- gum line -->
+      <path d="M36 57 Q50 68 64 57" stroke="#ffaaaa" stroke-width="3" fill="none"/>
+      <!-- teeth -->
+      <rect x="38" y="58" width="7" height="6" rx="2" fill="white"/>
+      <rect x="46.5" y="58" width="7" height="7" rx="2" fill="white"/>
+      <rect x="55" y="58" width="7" height="6" rx="2" fill="white"/>
+    </svg>`
+  },
+  {
+    id:'saito_n', name:'斎藤のぞみ', rarity:'c',
+    serif:null,
+    svg:`<svg viewBox="0 0 100 120" width="100" height="120" xmlns="http://www.w3.org/2000/svg">
+      <!-- Umeboshi (pickled plum) character -->
+      <ellipse cx="50" cy="65" rx="40" ry="38" fill="#cc4466"/>
+      <!-- wrinkled surface -->
+      <path d="M20,50 Q25,42 30,50" stroke="#aa2244" stroke-width="1.5" fill="none"/>
+      <path d="M70,50 Q75,42 80,50" stroke="#aa2244" stroke-width="1.5" fill="none"/>
+      <path d="M30,78 Q35,72 42,78" stroke="#aa2244" stroke-width="1.5" fill="none"/>
+      <path d="M58,78 Q65,72 70,78" stroke="#aa2244" stroke-width="1.5" fill="none"/>
+      <path d="M15,65 Q22,58 28,65" stroke="#aa2244" stroke-width="1" fill="none"/>
+      <path d="M72,65 Q78,58 85,65" stroke="#aa2244" stroke-width="1" fill="none"/>
+      <!-- seed -->
+      <ellipse cx="50" cy="65" rx="18" ry="22" fill="#cc6633" opacity=".5"/>
+      <!-- cute face -->
+      <ellipse cx="38" cy="60" rx="5" ry="5" fill="#1a1a1a"/>
+      <ellipse cx="62" cy="60" rx="5" ry="5" fill="#1a1a1a"/>
+      <circle cx="39" cy="58" r="1.5" fill="white"/>
+      <circle cx="63" cy="58" r="1.5" fill="white"/>
+      <ellipse cx="30" cy="67" rx="6" ry="4" fill="#ee6688" opacity=".5"/>
+      <ellipse cx="70" cy="67" rx="6" ry="4" fill="#ee6688" opacity=".5"/>
+      <path d="M41 72 Q50 78 59 72" stroke="#aa2244" stroke-width="2" fill="none"/>
+      <!-- name label -->
+      <text x="50" y="110" text-anchor="middle" font-size="7" fill="#880022" font-family="sans-serif">梅干し</text>
+    </svg>`
+  },
+  {
+    id:'hoshino_k', name:'星野圭吾', rarity:'c',
+    serif:null,
+    svg:`<svg viewBox="0 0 100 120" width="100" height="120" xmlns="http://www.w3.org/2000/svg">
+      <!-- alien body -->
+      <ellipse cx="50" cy="90" rx="26" ry="24" fill="#44cc66"/>
+      <!-- alien head (big) -->
+      <ellipse cx="50" cy="38" rx="34" ry="36" fill="#44cc66"/>
+      <!-- 3 eyes -->
+      <ellipse cx="30" cy="32" rx="9" ry="9" fill="white"/>
+      <ellipse cx="50" cy="26" rx="9" ry="9" fill="white"/>
+      <ellipse cx="70" cy="32" rx="9" ry="9" fill="white"/>
+      <ellipse cx="30" cy="32" rx="5" ry="5" fill="#ff2200"/>
+      <ellipse cx="50" cy="26" rx="5" ry="5" fill="#ff2200"/>
+      <ellipse cx="70" cy="32" rx="5" ry="5" fill="#ff2200"/>
+      <circle cx="31" cy="31" r="1.5" fill="white"/>
+      <circle cx="51" cy="25" r="1.5" fill="white"/>
+      <circle cx="71" cy="31" r="1.5" fill="white"/>
+      <!-- antenna x2 -->
+      <line x1="30" y1="4" x2="22" y2="-4" stroke="#44cc66" stroke-width="3"/>
+      <circle cx="20" cy="-6" r="5" fill="#ffcc00"/>
+      <line x1="70" y1="4" x2="78" y2="-4" stroke="#44cc66" stroke-width="3"/>
+      <circle cx="80" cy="-6" r="5" fill="#ffcc00"/>
+      <!-- slit mouth -->
+      <path d="M38 56 Q50 62 62 56" stroke="#1a5a1a" stroke-width="3" fill="none"/>
+      <!-- spots -->
+      <ellipse cx="24" cy="55" rx="5" ry="3" fill="#33aa44" opacity=".7"/>
+      <ellipse cx="76" cy="55" rx="5" ry="3" fill="#33aa44" opacity=".7"/>
+    </svg>`
+  },
+  {
+    id:'shibuya', name:'渋谷俊樹', rarity:'c',
+    serif:null,
+    svg:`<svg viewBox="0 0 100 120" width="100" height="120" xmlns="http://www.w3.org/2000/svg">
+      <!-- giant onigiri -->
+      <polygon points="50,5 5,90 95,90" fill="white" stroke="#ddd" stroke-width="2"/>
+      <!-- nori (seaweed) -->
+      <rect x="18" y="62" width="64" height="28" rx="4" fill="#1a2a1a"/>
+      <!-- face on rice -->
+      <ellipse cx="38" cy="45" rx="6" ry="6" fill="#1a1a1a"/>
+      <ellipse cx="62" cy="45" rx="6" ry="6" fill="#1a1a1a"/>
+      <circle cx="39" cy="43" r="1.8" fill="white"/>
+      <circle cx="63" cy="43" r="1.8" fill="white"/>
+      <ellipse cx="28" cy="56" rx="7" ry="4" fill="#ffcccc" opacity=".6"/>
+      <ellipse cx="72" cy="56" rx="7" ry="4" fill="#ffcccc" opacity=".6"/>
+      <path d="M40 58 Q50 64 60 58" stroke="#888" stroke-width="2.5" fill="none"/>
+      <!-- sesame seeds -->
+      <circle cx="50" cy="25" r="2" fill="#ccaa66"/>
+      <circle cx="44" cy="35" r="1.5" fill="#ccaa66"/>
+      <circle cx="56" cy="32" r="1.5" fill="#ccaa66"/>
+      <!-- tiny arms -->
+      <ellipse cx="8" cy="76" rx="7" ry="12" fill="white" transform="rotate(30,8,76)"/>
+      <ellipse cx="92" cy="76" rx="7" ry="12" fill="white" transform="rotate(-30,92,76)"/>
+      <!-- legs -->
+      <rect x="30" y="88" width="14" height="22" rx="6" fill="white"/>
+      <rect x="56" y="88" width="14" height="22" rx="6" fill="white"/>
+    </svg>`
+  },
+  {
+    id:'yokosaka', name:'横坂祐人', rarity:'c',
+    serif:null,
+    svg:`<svg viewBox="0 0 100 120" width="100" height="120" xmlns="http://www.w3.org/2000/svg">
+      <rect x="28" y="68" width="44" height="47" rx="6" fill="#2244aa"/>
+      <rect x="41" y="58" width="18" height="14" rx="3" fill="#f5c8a0"/>
+      <ellipse cx="50" cy="42" rx="24" ry="26" fill="#f5c8a0"/>
+      <ellipse cx="50" cy="20" rx="24" ry="10" fill="#2a1a0a"/>
+      <rect x="26" y="20" width="48" height="12" fill="#2a1a0a"/>
+      <ellipse cx="37" cy="41" rx="5" ry="5" fill="#1a1a1a"/>
+      <ellipse cx="63" cy="41" rx="5" ry="5" fill="#1a1a1a"/>
+      <circle cx="38" cy="39" r="1.5" fill="white"/>
+      <circle cx="64" cy="39" r="1.5" fill="white"/>
+      <ellipse cx="50" cy="52" rx="3" ry="2" fill="#e0a878"/>
+      <path d="M41 58 Q50 64 59 58" stroke="#c07050" stroke-width="2" fill="none"/>
+      <!-- arm showing wrist burn scar -->
+      <rect x="14" y="75" width="14" height="36" rx="7" fill="#f5c8a0"/>
+      <!-- burn scar pattern -->
+      <ellipse cx="21" cy="100" rx="6" ry="4" fill="#cc6644" opacity=".7"/>
+      <path d="M17,96 Q21,92 25,96" stroke="#cc5533" stroke-width="1.5" fill="none"/>
+      <path d="M16,100 Q21,97 26,100" stroke="#cc5533" stroke-width="1" fill="none"/>
+    </svg>`
+  },
+  {
+    id:'yasunaka', name:'安中忠政', rarity:'c',
+    serif:null,
+    svg:`<svg viewBox="0 0 100 120" width="100" height="120" xmlns="http://www.w3.org/2000/svg">
+      <rect x="26" y="66" width="48" height="49" rx="6" fill="#555"/>
+      <rect x="41" y="56" width="18" height="14" rx="3" fill="#f5c8a0"/>
+      <!-- bald head -->
+      <ellipse cx="50" cy="38" rx="26" ry="28" fill="#f5c8a0"/>
+      <!-- shiny bald top -->
+      <ellipse cx="42" cy="22" rx="8" ry="5" fill="rgba(255,255,220,.5)"/>
+      <!-- very thin side hair -->
+      <path d="M24,36 Q22,25 26,20 Q30,16 36,18" stroke="#3a2a1a" stroke-width="2" fill="none"/>
+      <path d="M76,36 Q78,25 74,20 Q70,16 64,18" stroke="#3a2a1a" stroke-width="2" fill="none"/>
+      <!-- angry glasses -->
+      <rect x="26" y="34" width="19" height="11" rx="4" fill="rgba(200,220,255,.3)" stroke="#333" stroke-width="2.5"/>
+      <rect x="55" y="34" width="19" height="11" rx="4" fill="rgba(200,220,255,.3)" stroke="#333" stroke-width="2.5"/>
+      <line x1="45" y1="39" x2="55" y2="39" stroke="#333" stroke-width="2"/>
+      <ellipse cx="35" cy="39" rx="4.5" ry="4.5" fill="#1a1a1a"/>
+      <ellipse cx="64" cy="39" rx="4.5" ry="4.5" fill="#1a1a1a"/>
+      <!-- angry eyebrows -->
+      <path d="M26 32 L44 36" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round"/>
+      <path d="M74 32 L56 36" stroke="#1a1a1a" stroke-width="3" stroke-linecap="round"/>
+      <!-- forehead vein -->
+      <path d="M44,28 Q46,24 50,26 Q54,24 56,28" stroke="#cc2222" stroke-width="1.5" fill="none"/>
+      <ellipse cx="50" cy="50" rx="3" ry="2" fill="#e0a878"/>
+      <!-- angry mouth -->
+      <path d="M38 57 Q50 52 62 57" stroke="#aa2222" stroke-width="3" fill="none" stroke-linecap="round"/>
+    </svg>`
+  },
+  {
+    id:'hasegawa_r', name:'長谷川亮', rarity:'c',
+    serif:'おいぃしのぶぅ',
+    svg:`<svg viewBox="0 0 100 120" width="100" height="120" xmlns="http://www.w3.org/2000/svg">
+      <!-- black suit -->
+      <rect x="24" y="66" width="52" height="49" rx="6" fill="#111"/>
+      <polygon points="42,66 50,80 58,66 54,66 50,74 46,66" fill="white"/>
+      <rect x="48" y="66" width="4" height="30" fill="#cc0000"/>
+      <rect x="41" y="56" width="18" height="14" rx="3" fill="#f5c8a0"/>
+      <ellipse cx="50" cy="40" rx="24" ry="26" fill="#f5c8a0"/>
+      <ellipse cx="50" cy="18" rx="24" ry="10" fill="#1a1010"/>
+      <rect x="26" y="18" width="48" height="12" fill="#1a1010"/>
+      <!-- teacher stern look -->
+      <ellipse cx="37" cy="39" rx="5" ry="5" fill="#1a1a1a"/>
+      <ellipse cx="63" cy="39" rx="5" ry="5" fill="#1a1a1a"/>
+      <circle cx="38" cy="37" r="1.5" fill="white"/>
+      <circle cx="64" cy="37" r="1.5" fill="white"/>
+      <path d="M30 32 Q37 29 44 32" stroke="#1a1a1a" stroke-width="2.5" fill="none"/>
+      <path d="M56 32 Q63 29 70 32" stroke="#1a1a1a" stroke-width="2.5" fill="none"/>
+      <ellipse cx="50" cy="50" rx="3" ry="2" fill="#e0a878"/>
+      <path d="M41 57 Q50 62 59 57" stroke="#c07050" stroke-width="2" fill="none"/>
+    </svg>`
+  },
+  {
+    id:'sudo', name:'須藤さつき', rarity:'c',
+    serif:'たけいしかぁああい！！',
+    svg:`<svg viewBox="0 0 100 120" width="100" height="120" xmlns="http://www.w3.org/2000/svg">
+      <!-- suit -->
+      <rect x="22" y="66" width="56" height="49" rx="6" fill="#336699"/>
+      <polygon points="40,66 50,79 60,66 56,66 50,74 44,66" fill="white"/>
+      <rect x="41" y="56" width="18" height="14" rx="3" fill="#f5c8a0"/>
+      <ellipse cx="50" cy="40" rx="24" ry="27" fill="#f5c8a0"/>
+      <!-- short hair with perm (middle aged woman teacher) -->
+      <ellipse cx="50" cy="18" rx="26" ry="13" fill="#4a3020"/>
+      <rect x="24" y="18" width="52" height="14" fill="#4a3020"/>
+      <ellipse cx="24" cy="30" rx="7" ry="12" fill="#4a3020"/>
+      <ellipse cx="76" cy="30" rx="7" ry="12" fill="#4a3020"/>
+      <ellipse cx="50" cy="17" rx="22" ry="8" fill="#5a3a28"/>
+      <!-- round face features -->
+      <ellipse cx="30" cy="50" rx="8" ry="5" fill="#ffbbaa" opacity=".5"/>
+      <ellipse cx="70" cy="50" rx="8" ry="5" fill="#ffbbaa" opacity=".5"/>
+      <ellipse cx="37" cy="40" rx="5.5" ry="5" fill="#1a1a1a"/>
+      <ellipse cx="63" cy="40" rx="5.5" ry="5" fill="#1a1a1a"/>
+      <circle cx="38" cy="38" r="1.5" fill="white"/>
+      <circle cx="64" cy="38" r="1.5" fill="white"/>
+      <ellipse cx="50" cy="51" rx="3.5" ry="2.5" fill="#d49070"/>
+      <!-- shouting mouth -->
+      <ellipse cx="50" cy="58" rx="10" ry="8" fill="#cc2222"/>
+      <rect x="42" y="54" width="6" height="5" rx="1" fill="white"/>
+      <rect x="52" y="54" width="6" height="5" rx="1" fill="white"/>
+    </svg>`
+  },
+  {
+    id:'inoue_h', name:'井上北斗', rarity:'c',
+    serif:'たったったったしねやぁあ！',
+    svg:`<svg viewBox="0 0 100 120" width="100" height="120" xmlns="http://www.w3.org/2000/svg">
+      <!-- black suit -->
+      <rect x="24" y="66" width="52" height="49" rx="6" fill="#111"/>
+      <polygon points="42,66 50,80 58,66 54,66 50,74 46,66" fill="white"/>
+      <rect x="48" y="66" width="4" height="30" fill="#003399"/>
+      <rect x="41" y="56" width="18" height="14" rx="3" fill="#f5c8a0"/>
+      <ellipse cx="50" cy="40" rx="24" ry="26" fill="#f5c8a0"/>
+      <ellipse cx="50" cy="18" rx="24" ry="10" fill="#1a1010"/>
+      <rect x="26" y="18" width="48" height="12" fill="#1a1010"/>
+      <!-- intense eyes -->
+      <ellipse cx="37" cy="40" rx="6" ry="6" fill="white"/>
+      <ellipse cx="63" cy="40" rx="6" ry="6" fill="white"/>
+      <ellipse cx="37" cy="40" rx="4" ry="4" fill="#1a1a1a"/>
+      <ellipse cx="63" cy="40" rx="4" ry="4" fill="#1a1a1a"/>
+      <circle cx="38" cy="38" r="1.5" fill="white"/>
+      <circle cx="64" cy="38" r="1.5" fill="white"/>
+      <!-- dramatic angry brows -->
+      <path d="M28 32 L42 37" stroke="#1a1a1a" stroke-width="3.5" stroke-linecap="round"/>
+      <path d="M72 32 L58 37" stroke="#1a1a1a" stroke-width="3.5" stroke-linecap="round"/>
+      <ellipse cx="50" cy="51" rx="3" ry="2" fill="#e0a878"/>
+      <!-- open shouting mouth -->
+      <ellipse cx="50" cy="59" rx="9" ry="7" fill="#cc1111"/>
+      <rect x="43" y="55" width="5" height="5" rx="1" fill="ivory"/>
+      <rect x="52" y="55" width="5" height="5" rx="1" fill="ivory"/>
+      <!-- vein effects -->
+      <path d="M24,38 Q20,32 24,26" stroke="#cc2222" stroke-width="2" fill="none"/>
+      <path d="M76,38 Q80,32 76,26" stroke="#cc2222" stroke-width="2" fill="none"/>
+    </svg>`
+  },
+  {
+    id:'hasegawa_t', name:'長谷川拓馬', rarity:'c',
+    serif:null,
+    svg:`<svg viewBox="0 0 100 120" width="100" height="120" xmlns="http://www.w3.org/2000/svg">
+      <!-- apron -->
+      <rect x="26" y="66" width="48" height="49" rx="6" fill="#228822"/>
+      <rect x="36" y="66" width="28" height="49" fill="#33aa33"/>
+      <rect x="44" y="50" width="12" height="18" rx="3" fill="#f5c8a0"/>
+      <!-- head -->
+      <ellipse cx="50" cy="38" rx="24" ry="26" fill="#f5c8a0"/>
+      <ellipse cx="50" cy="17" rx="24" ry="10" fill="#3a2010"/>
+      <rect x="26" y="17" width="48" height="12" fill="#3a2010"/>
+      <!-- friendly face -->
+      <ellipse cx="37" cy="38" rx="5" ry="5" fill="#1a1a1a"/>
+      <ellipse cx="63" cy="38" rx="5" ry="5" fill="#1a1a1a"/>
+      <circle cx="38" cy="36" r="1.5" fill="white"/>
+      <circle cx="64" cy="36" r="1.5" fill="white"/>
+      <ellipse cx="28" cy="48" rx="7" ry="4" fill="#ffaaa0" opacity=".5"/>
+      <ellipse cx="72" cy="48" rx="7" ry="4" fill="#ffaaa0" opacity=".5"/>
+      <ellipse cx="50" cy="50" rx="3" ry="2" fill="#e0a878"/>
+      <path d="M40 57 Q50 64 60 57" stroke="#c07050" stroke-width="2.5" fill="none"/>
+      <!-- veggie in hand -->
+      <rect x="64" y="76" width="10" height="30" rx="4" fill="#ff6633"/>
+      <path d="M60,80 Q64,74 68,72 Q72,74 76,80" stroke="#228822" stroke-width="3" fill="#228822"/>
+    </svg>`
+  }
 ];
-function drawNameko(cx,cy,s,w=0){
-const ox=cx-8*s+w, oy=cy-8*s;
-ctx.save();
-for(let r=0;r<16;r++) for(let c=0;c<16;c++){
-const p=ND[r][c]; if(!p)continue;
-ctx.fillStyle=NP[p];
-ctx.fillRect(Math.round(ox+c*s),Math.round(oy+r*s),s,s);
-}
-ctx.restore();
-}
 
-// 敵
-let enemies=[], enemySpawnTimer=0, enemySpawnRate=90;
-function spawnEnemy(){
-const s=2+Math.random()*1.5;
-enemies.push({x:30+Math.random()*(GAME_W-60),y:-40,vy:0.8+Math.random()*1.2,vx:(Math.random()-0.5)*0.8,scale:s,r:s*7,wigglePhase:Math.random()*Math.PI*2,hp:1});
-}
+// =============================================
+// GLOBALS
+// =============================================
+let currentChar = null;
+let tapCount = 0;
+let quitTimer = null;
+let miniRunning = false;
+let walkerPos = {x:50, y:50};
+let miniStartTime = null;
+let walkerDir = 1;
+let walkerMoveTimer = null;
+let footprints = [];
 
-// 爆発
-let particles=[];
-function spawnExplosion(x,y){
-const cols=[’#C47A28’,’#E8A84A’,’#8B4E10’,’#F5EDD4’,’#D4C4A0’,’#FFEB99’];
-const n=12+Math.floor(Math.random()*6);
-for(let i=0;i<n;i++){
-const a=(Math.PI*2/n)*i+Math.random()*0.5, sp=1.5+Math.random()*3.5;
-particles.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-1.5,r:3+Math.random()*4,color:cols[Math.floor(Math.random()*cols.length)],life:1,decay:0.03+Math.random()*0.03,sx:0.7+Math.random()*0.6,sy:0.7+Math.random()*0.6});
-}
-particles.push({x,y,vx:0,vy:0,r:18,color:‘rgba(255,255,200,0.8)’,life:1,decay:0.12,sx:1,sy:1,flash:true});
-}
+// =============================================
+// TITLE: stars
+// =============================================
+(function createStars(){
+  const layer = document.getElementById('starsLayer');
+  for(let i=0;i<120;i++){
+    const s = document.createElement('div');
+    s.className = 'star-dot';
+    const sz = Math.random()*2.5+.5;
+    s.style.cssText = `width:${sz}px;height:${sz}px;top:${Math.random()*85}%;left:${Math.random()*100}%;--d:${(Math.random()*3+1.5).toFixed(1)}s;--delay:${(Math.random()*4).toFixed(1)}s;`;
+    layer.appendChild(s);
+  }
+})();
 
-// 機体描画
-function drawPlayer(){
-if(player.invincible>0&&Math.floor(frameCount/4)%2===0)return;
-ctx.save(); ctx.translate(player.x,player.y);
-const fh=10+Math.sin(frameCount*0.3)*5;
-[-18,18].forEach(ex=>{
-const g=ctx.createLinearGradient(ex,20,ex,20+fh+10);
-g.addColorStop(0,‘rgba(255,200,80,0.9)’);g.addColorStop(0.4,‘rgba(255,100,20,0.7)’);g.addColorStop(1,‘rgba(255,50,0,0)’);
-ctx.beginPath();ctx.moveTo(ex-5,20);ctx.lineTo(ex,20+fh+10);ctx.lineTo(ex+5,20);ctx.fillStyle=g;ctx.fill();
-});
-const bg=ctx.createLinearGradient(-12,-30,12,-30);
-bg.addColorStop(0,’#d0e8ff’);bg.addColorStop(0.4,’#ffffff’);bg.addColorStop(1,’#a8c8e8’);
-ctx.beginPath();ctx.moveTo(0,-32);ctx.bezierCurveTo(8,-25,12,-10,12,10);ctx.lineTo(12,18);ctx.lineTo(-12,18);ctx.lineTo(-12,10);ctx.bezierCurveTo(-12,-10,-8,-25,0,-32);ctx.fillStyle=bg;ctx.fill();ctx.strokeStyle=’#6899bb’;ctx.lineWidth=0.8;ctx.stroke();
-[[-1],[1]].forEach(([side])=>{
-const wg=ctx.createLinearGradient(side*12,0,side*36,8);wg.addColorStop(0,’#b8d8f0’);wg.addColorStop(1,’#7aaac8’);
-ctx.beginPath();ctx.moveTo(side*12,-5);ctx.lineTo(side*38,8);ctx.lineTo(side*30,14);ctx.lineTo(side*12,8);ctx.closePath();ctx.fillStyle=wg;ctx.fill();ctx.strokeStyle=’#5588aa’;ctx.lineWidth=0.5;ctx.stroke();
-ctx.beginPath();ctx.moveTo(side*38,8);ctx.lineTo(side*40,4);ctx.lineTo(side*38,2);ctx.closePath();ctx.fillStyle=’#99bbdd’;ctx.fill();
-});
-[[-1],[1]].forEach(([side])=>{ctx.beginPath();ctx.moveTo(side*12,10);ctx.lineTo(side*22,16);ctx.lineTo(side*18,20);ctx.lineTo(side*12,17);ctx.closePath();ctx.fillStyle=’#a0c0de’;ctx.fill();});
-ctx.beginPath();ctx.moveTo(0,-10);ctx.lineTo(0,-22);ctx.lineTo(5,-8);ctx.closePath();ctx.fillStyle=’#c0ddf0’;ctx.fill();
-[-18,18].forEach(ex=>{ctx.beginPath();ctx.ellipse(ex,8,5,7,0,0,Math.PI*2);ctx.fillStyle=’#8aabcc’;ctx.fill();ctx.strokeStyle=’#567890’;ctx.lineWidth=0.5;ctx.stroke();ctx.beginPath();ctx.ellipse(ex,14,3.5,2,0,0,Math.PI*2);ctx.fillStyle=’#223344’;ctx.fill();});
-ctx.fillStyle=’#88ccff’;
-for(let i=-2;i<=2;i++){ctx.beginPath();ctx.ellipse(i*4.5,-12,2,2.5,0,0,Math.PI*2);ctx.fill();}
-ctx.fillStyle=’#3366aa’;ctx.font=‘bold 6px sans-serif’;ctx.textAlign=‘center’;ctx.fillText(‘JET’,0,-2);
-ctx.restore();
+// =============================================
+// MODAL
+// =============================================
+function openModal(){
+  document.getElementById('modal').classList.add('show');
 }
 
-// 背景
-const clouds=Array.from({length:8},()=>({x:Math.random()*GAME_W,y:Math.random()*GAME_H,w:60+Math.random()*100,h:25+Math.random()*30,speed:0.2+Math.random()*0.4,alpha:0.3+Math.random()*0.4}));
-function drawSky(){
-const g=ctx.createLinearGradient(0,0,0,GAME_H);g.addColorStop(0,’#0a2a6e’);g.addColorStop(0.5,’#1a6dbf’);g.addColorStop(1,’#5ba3e0’);ctx.fillStyle=g;ctx.fillRect(0,0,GAME_W,GAME_H);
-clouds.forEach(c=>{
-c.y+=c.speed;if(c.y>GAME_H+c.h){c.y=-c.h;c.x=Math.random()*GAME_W;}
-ctx.save();ctx.globalAlpha=c.alpha;ctx.fillStyle=’#fff’;
-[{ox:0,oy:0,rx:c.w*.4,ry:c.h*.4},{ox:c.w*.2,oy:c.h*.1,rx:c.w*.35,ry:c.h*.38},{ox:-c.w*.2,oy:c.h*.1,rx:c.w*.3,ry:c.h*.35},{ox:c.w*.4,oy:c.h*.2,rx:c.w*.2,ry:c.h*.25},{ox:-c.w*.4,oy:c.h*.2,rx:c.w*.22,ry:c.h*.25}]
-.forEach(p=>{ctx.beginPath();ctx.ellipse(c.x+p.ox,c.y+p.oy,p.rx,p.ry,0,0,Math.PI*2);ctx.fill();});
-ctx.restore();
-});
+// =============================================
+// GACHA
+// =============================================
+// drag state
+let dragState = {active:false, startY:0, currentY:0, dragonY:-100};
+
+function startGacha(){
+  document.getElementById('modal').classList.remove('show');
+  const title = document.getElementById('titleScreen');
+  const gacha = document.getElementById('gachaScreen');
+  title.classList.add('hidden');
+  gacha.classList.remove('hidden');
+
+  // determine result
+  const r = Math.random();
+  let pool;
+  if(r < 0.05) pool = CHARS.filter(c=>c.rarity==='vr');
+  else if(r < 0.25) pool = CHARS.filter(c=>c.rarity==='sr');
+  else pool = CHARS.filter(c=>c.rarity==='c');
+  currentChar = pool[Math.floor(Math.random()*pool.length)];
+
+  // show dragon, animate descent
+  dragState = {active:false, startY:0, currentY:0, dragonY:-60, triggered:false};
+  const dw = document.getElementById('dragonWrap');
+  dw.style.display = 'flex';
+  dw.style.transition = 'transform 1.2s cubic-bezier(.2,0,.6,1)';
+  dw.style.transform = 'translateY(-60%)';
+
+  // tap anywhere on gacha screen to trigger
+  function onGachaTap(e){
+    if(dragState.triggered) return;
+    gacha.removeEventListener('click', onGachaTap);
+    gacha.removeEventListener('touchstart', onGachaTap);
+    onDragTriggered(dw, gacha);
+  }
+  gacha.addEventListener('click', onGachaTap);
+  gacha.addEventListener('touchstart', onGachaTap, {passive:true});
+  dragState._cleanup = ()=>{
+    gacha.removeEventListener('click', onGachaTap);
+    gacha.removeEventListener('touchstart', onGachaTap);
+  };
+
+  spawnParticles();
 }
 
-// HUD
-function drawHUD(){
-ctx.save();ctx.font=‘bold 22px “Segoe UI”,sans-serif’;ctx.textAlign=‘left’;ctx.fillStyle=’#fff’;ctx.shadowColor=’#000’;ctx.shadowBlur=4;ctx.fillText(‘🍄 ‘+score,12,36);ctx.font=‘14px “Segoe UI”,sans-serif’;ctx.fillStyle=’#ffd700’;ctx.fillText(’BEST ’+hiScore,12,58);ctx.restore();
+function onDragTriggered(dw, gacha){
+  if(dragState.triggered) return;
+  dragState.triggered = true;
+  dragState._cleanup && dragState._cleanup();
+
+  // hide drag hint
+  document.getElementById('dragHint').style.display='none';
+
+  // animate dragon slamming down
+  dw.style.transition = 'transform .3s cubic-bezier(.2,1.5,.4,1)';
+  dw.style.transform = 'translateY(10%)';
+
+  // big shake
+  gacha.classList.add('shake');
+  setTimeout(()=>gacha.classList.remove('shake'),500);
+
+  spawnParticles();
+
+  // show capsule
+  setTimeout(()=>{
+    const cw = document.getElementById('capsuleWrap');
+    cw.classList.remove('hidden');
+
+    // flash
+    const flash = document.createElement('div');
+    flash.className = 'flash';
+    document.body.appendChild(flash);
+    setTimeout(()=>flash.remove(), 600);
+  }, 400);
+
+  // tap capsule to crack
+  setTimeout(()=>{
+    const cw = document.getElementById('capsuleWrap');
+    cw.style.cursor = 'pointer';
+    cw.onclick = crackCapsule;
+    cw.ontouchstart = crackCapsule;
+    // pulse hint
+    cw.style.animation = 'capsulePulse .6s infinite alternate';
+    const lbl = document.createElement('div');
+    lbl.id = 'tapCapsuleHint';
+    lbl.style.cssText = 'position:absolute;bottom:6%;left:0;right:0;text-align:center;z-index:25;color:#FFD700;font-weight:700;font-size:1rem;text-shadow:0 0 10px #ff6600;animation:hintBounce 1s infinite alternate;';
+    lbl.textContent = '👆 カプセルをタップ！';
+    gacha.appendChild(lbl);
+  }, 800);
 }
 
-function rrect(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();}
+function crackCapsule(){
+  const cw = document.getElementById('capsuleWrap');
+  if(!cw || cw.dataset.cracked) return;
+  cw.dataset.cracked = '1';
+  cw.onclick = null; cw.ontouchstart = null;
+  const hint = document.getElementById('tapCapsuleHint');
+  if(hint) hint.remove();
 
-// タイトル
-function drawTitle(){
-ctx.save();ctx.fillStyle=‘rgba(0,0,30,0.75)’;rrect(GAME_W/2-155,GAME_H/2-145,310,isTouch?290:260,16);ctx.fill();ctx.textAlign=‘center’;
-ctx.font=‘bold 26px “Meiryo”,sans-serif’;ctx.fillStyle=’#ffdd44’;ctx.shadowColor=’#ff8800’;ctx.shadowBlur=12;ctx.fillText(‘なめこシューティング’,GAME_W/2,GAME_H/2-100);ctx.shadowBlur=0;
-ctx.font=‘14px “Meiryo”,sans-serif’;ctx.fillStyle=’#ccddff’;
-if(isTouch){
-ctx.fillText(‘スティックで移動’,GAME_W/2,GAME_H/2-60);ctx.fillText(‘🔫 ボタンで射撃’,GAME_W/2,GAME_H/2-34);ctx.fillText(‘なめこを全部倒せ！’,GAME_W/2,GAME_H/2-8);
-ctx.fillStyle=’#44ff88’;ctx.font=‘bold 17px “Segoe UI”,sans-serif’;ctx.fillText(‘画面タップでスタート’,GAME_W/2,GAME_H/2+40);
-}else{
-ctx.fillText(‘← → キーで移動’,GAME_W/2,GAME_H/2-60);ctx.fillText(‘スペースキーで射撃’,GAME_W/2,GAME_H/2-34);ctx.fillText(‘なめこを全部倒せ！’,GAME_W/2,GAME_H/2-8);
-ctx.fillStyle=’#44ff88’;ctx.font=‘bold 17px “Segoe UI”,sans-serif’;ctx.fillText(’[ SPACE ] でスタート’,GAME_W/2,GAME_H/2+40);
-}
-drawNameko(GAME_W/2-80,GAME_H/2-105,2.5);drawNameko(GAME_W/2+80,GAME_H/2-105,2.5);
-ctx.restore();
-}
+  const svg = document.getElementById('capsuleSvg');
+  svg.classList.add('capsule-crack');
+  const flash = document.createElement('div');
+  flash.className = 'flash';
+  document.body.appendChild(flash);
+  setTimeout(()=>flash.remove(), 600);
 
-// ゲームオーバー
-function drawGameOver(){
-ctx.save();ctx.fillStyle=‘rgba(80,0,0,0.78)’;rrect(GAME_W/2-155,GAME_H/2-120,310,240,16);ctx.fill();ctx.textAlign=‘center’;
-ctx.font=‘bold 36px “Meiryo”,sans-serif’;ctx.fillStyle=’#ff4444’;ctx.shadowColor=’#ff0000’;ctx.shadowBlur=16;ctx.fillText(‘GAME OVER’,GAME_W/2,GAME_H/2-60);ctx.shadowBlur=0;
-ctx.font=‘bold 22px “Segoe UI”,sans-serif’;ctx.fillStyle=’#ffffaa’;ctx.fillText(‘スコア : ‘+score,GAME_W/2,GAME_H/2-14);
-ctx.font=‘16px “Segoe UI”,sans-serif’;ctx.fillStyle=’#ffcc44’;ctx.fillText(‘ベスト : ‘+hiScore,GAME_W/2,GAME_H/2+18);
-ctx.fillStyle=’#aaffcc’;ctx.font=‘bold 15px “Segoe UI”,sans-serif’;ctx.fillText(isTouch?‘画面タップでリトライ’:’[ SPACE ] でリトライ’,GAME_W/2,GAME_H/2+68);
-ctx.restore();
+  // begin tease sequence
+  setTimeout(startTeaseSequence, 600);
 }
 
-function circleHit(ax,ay,ar,bx,by,br){const dx=ax-bx,dy=ay-by;return dx*dx+dy*dy<(ar+br)*(ar+br);}
+function startTeaseSequence(){
+  document.getElementById('gachaScreen').querySelector('.light-beams').style.animation='rotateLights .5s linear infinite';
+  const overlay = document.getElementById('teaseOverlay');
+  overlay.classList.add('show');
+  spawnParticles();
 
-function startGame(){score=0;frameCount=0;bullets=[];enemies=[];particles=[];enemySpawnTimer=0;enemySpawnRate=90;player.x=GAME_W/2;player.y=GAME_H-110;player.invincible=0;player.shootCooldown=0;state=‘play’;}
+  const c = currentChar;
+  const rarityLabel = c.rarity==='vr'?'⭐⭐⭐⭐ VICTORY RARE！！':c.rarity==='sr'?'⭐⭐⭐ SUPER RARE！':'⭐⭐ COMMON';
+  const tauntLines = [
+    ['なんと…', 'この人物は…', rarityLabel],
+    ['まさか…', '見附が誇る', 'あの人物か！？'],
+    ['ッッッ！！', 'その名は…', '…………'],
+  ];
+  const seq = tauntLines[Math.floor(Math.random() * tauntLines.length)];
 
-function update(){
-if(state!==‘play’)return;
-frameCount++;
-const mx=(keys[‘ArrowLeft’]?-1:0)+(keys[‘ArrowRight’]?1:0)+stick.x;
-const my=(keys[‘ArrowUp’]?-1:0)+(keys[‘ArrowDown’]?1:0)+stick.y;
-player.x=Math.max(20,Math.min(GAME_W-20,player.x+mx*player.speed));
-player.y=Math.max(20,Math.min(GAME_H-20,player.y+my*player.speed));
-player.shootCooldown–;
-if((keys[‘Space’]||shootPressed)&&player.shootCooldown<=0){spawnBullet();player.shootCooldown=player.shootRate;}
-if(player.invincible>0)player.invincible–;
-bullets.forEach(b=>{b.y+=b.vy;});bullets=bullets.filter(b=>b.y>-20);
-enemySpawnTimer++;
-if(enemySpawnTimer>=enemySpawnRate){spawnEnemy();enemySpawnTimer=0;enemySpawnRate=Math.max(30,90-Math.floor(score/5));}
-enemies.forEach(e=>{e.x+=e.vx;e.y+=e.vy;if(e.x<e.r||e.x>GAME_W-e.r)e.vx*=-1;});
-enemies=enemies.filter(e=>e.y<GAME_H+60);
-enemies.forEach(e=>{bullets.forEach(b=>{if(b.hit)return;if(circleHit(b.x,b.y,5,e.x,e.y+e.scale*4,e.r*0.7)){b.hit=true;e.hp–;if(e.hp<=0){e.dead=true;spawnExplosion(e.x,e.y+e.scale*2);score++;if(score>hiScore)hiScore=score;}}});});
-bullets=bullets.filter(b=>!b.hit);enemies=enemies.filter(e=>!e.dead);
-if(player.invincible<=0){enemies.forEach(e=>{if(circleHit(player.x,player.y,16,e.x,e.y+e.scale*4,e.r*0.65)){spawnExplosion(e.x,e.y);e.dead=true;state=‘gameover’;}});enemies=enemies.filter(e=>!e.dead);}
-particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=0.08;p.life-=p.decay;});particles=particles.filter(p=>p.life>0);
+  const teaseText = document.getElementById('teaseText');
+  const teaseMsg = document.getElementById('teaseMsg');
+  const teaseSub = document.getElementById('teaseSub');
+
+  teaseText.textContent = seq[0];
+  teaseMsg.textContent = '';
+  teaseSub.textContent = '';
+
+  // step 1
+  setTimeout(()=>{
+    teaseMsg.textContent = seq[1];
+    teaseMsg.style.animation='teasePulse .6s infinite alternate';
+  }, 700);
+  // step 2
+  setTimeout(()=>{
+    teaseSub.textContent = seq[2];
+    spawnParticles();
+    // big flash
+    const fl = document.createElement('div');
+    fl.className='flash'; document.body.appendChild(fl);
+    setTimeout(()=>fl.remove(),500);
+  }, 1800);
+  // reveal card
+  setTimeout(()=>{
+    overlay.classList.remove('show');
+    showCard();
+  }, 3200);
 }
 
-function render(){
-drawSky();
-if(state===‘title’){drawTitle();return;}
-bullets.forEach(drawBullet);
-enemies.forEach(e=>{const w=Math.sin(frameCount*0.08+e.wigglePhase)*2;drawNameko(e.x,e.y,e.scale,w);});
-particles.forEach(p=>{
-ctx.save();ctx.globalAlpha=p.life;
-if(p.flash){const fg=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r);fg.addColorStop(0,p.color);fg.addColorStop(1,‘transparent’);ctx.fillStyle=fg;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();}
-else{ctx.translate(p.x,p.y);ctx.rotate(Math.atan2(p.vy,p.vx));ctx.scale(p.sx,p.sy);ctx.beginPath();ctx.ellipse(0,0,p.r*1.2,p.r*0.7,0,0,Math.PI*2);ctx.fillStyle=p.color;ctx.fill();}
-ctx.restore();
-});
-drawPlayer();drawHUD();
-if(state===‘gameover’)drawGameOver();
+function spawnParticles(){
+  const container = document.getElementById('particleContainer');
+  const colors = ['#FFD700','#ff6600','#ff0044','#00ffff','#ff00ff','#ffffff'];
+  for(let i=0;i<60;i++){
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const c = colors[Math.floor(Math.random()*colors.length)];
+    const sz = Math.random()*8+3;
+    const tx = (Math.random()-0.5)*300;
+    const ty = -(Math.random()*300+100);
+    const dur = (Math.random()*1.5+1).toFixed(1);
+    const delay = (Math.random()*2).toFixed(1);
+    p.style.cssText = `width:${sz}px;height:${sz}px;background:${c};left:${Math.random()*100}%;top:${Math.random()*100}%;--tx:${tx}px;--ty:${ty}px;--dur:${dur}s;--delay:${delay}s;`;
+    container.appendChild(p);
+  }
+  setTimeout(()=>container.innerHTML='', 5000);
 }
 
-function loop(){update();render();requestAnimationFrame(loop);}
-loop();
+// =============================================
+// CARD
+// =============================================
+function showCard(){
+  document.getElementById('gachaScreen').classList.add('hidden');
+  const cs = document.getElementById('cardScreen');
+  cs.classList.remove('hidden');
+
+  const c = currentChar;
+  const rarityClass = `rarity-${c.rarity}`;
+  const bg = document.getElementById('cardBg');
+
+  if(c.rarity==='vr'){
+    bg.style.background = 'radial-gradient(ellipse at center,#2a1500 0%,#000 100%)';
+    // confetti
+    spawnConfetti(80);
+  } else if(c.rarity==='sr'){
+    bg.style.background = 'radial-gradient(ellipse at center,#0a0a20 0%,#000 100%)';
+    spawnConfetti(30);
+  } else {
+    bg.style.background = 'radial-gradient(ellipse at center,#050520 0%,#000 100%)';
+  }
+
+  const rarityText = c.rarity==='vr'?'⭐⭐⭐⭐ VICTORY RARE':c.rarity==='sr'?'⭐⭐⭐ SUPER RARE':'⭐⭐ COMMON';
+
+  const container = document.getElementById('cardContainer');
+  container.className = `card-container ${rarityClass}`;
+  container.innerHTML = `
+    <div class="rarity-label">${rarityText}</div>
+    <div class="char-card">
+      ${c.rarity==='vr'?'<div class="vr-shimmer"></div>':''}
+      ${c.svg}
+      <div class="char-name">${c.name}</div>
+      ${c.serif?`<div class="char-serif">「${c.serif}」</div>`:''}
+    </div>
+    <button class="next-btn" onclick="startMini()">⛄ ミニゲームへ</button>
+  `;
+}
+
+function spawnConfetti(n){
+  const colors=['#FFD700','#ff6b35','#ff3399','#33aaff','#66ff44','#ff44ff'];
+  for(let i=0;i<n;i++){
+    const el = document.createElement('div');
+    el.className='confetti-piece';
+    const c=colors[Math.floor(Math.random()*colors.length)];
+    el.style.cssText=`left:${Math.random()*100}%;background:${c};--dur:${(Math.random()*2+2).toFixed(1)}s;--delay:${(Math.random()*2).toFixed(1)}s;transform:rotate(${Math.random()*360}deg);`;
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(),5000);
+  }
+}
+
+// =============================================
+// MINI GAME
+// =============================================
+function startMini(){
+  document.getElementById('cardScreen').classList.add('hidden');
+  document.getElementById('miniScreen').classList.remove('hidden');
+
+  tapCount=0;
+  footprints=[];
+  miniRunning=true;
+  miniStartTime = null;
+
+  const canvas = document.getElementById('snowCanvas');
+  const W = canvas.offsetWidth;
+  const H = canvas.offsetHeight;
+  canvas.width = W;
+  canvas.height = H;
+  drawSnow(canvas);
+
+  // place walker
+  walkerPos = {x: W*0.2, y: H*0.5};
+  updateWalker();
+
+  document.getElementById('tapCounter').textContent = `⏱ 5.0s　タップ: 0 / 20`;
+
+  // auto-walk
+  walkerMoveTimer = setInterval(autoWalk, 600);
+
+  // 5s countdown timer (renders every 100ms)
+  const LIMIT = 5000;
+  miniStartTime = Date.now();
+  quitTimer = setInterval(()=>{
+    if(!miniRunning) { clearInterval(quitTimer); return; }
+    const elapsed = Date.now() - miniStartTime;
+    const remain = Math.max(0, (LIMIT - elapsed) / 1000);
+    document.getElementById('tapCounter').textContent = `⏱ ${remain.toFixed(1)}s　タップ: ${tapCount} / 20`;
+    if(elapsed >= LIMIT) {
+      clearInterval(quitTimer);
+      if(miniRunning) triggerFail();
+    }
+  }, 100);
+
+  // tap listener
+  canvas.addEventListener('click', onTap);
+  canvas.addEventListener('touchstart', onTap, {passive:true});
+
+  const pct = document.getElementById('percentCanvas');
+  pct.width = W; pct.height = H;
+  pct.style.opacity='0';
+}
+
+function drawSnow(canvas){
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  // sky tint at top
+  const grad = ctx.createLinearGradient(0,0,0,H);
+  grad.addColorStop(0,'#d8e8f0');
+  grad.addColorStop(1,'#ffffff');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0,0,W,H);
+
+  // snow texture dots
+  ctx.fillStyle='rgba(255,255,255,.8)';
+  for(let i=0;i<200;i++){
+    ctx.beginPath();
+    ctx.arc(Math.random()*W, Math.random()*H, Math.random()*3+1, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  // fence at edge
+  ctx.strokeStyle='#aabbcc';
+  ctx.lineWidth=3;
+  ctx.setLineDash([8,6]);
+  ctx.strokeRect(10,10,W-20,H-20);
+  ctx.setLineDash([]);
+
+  // label
+  ctx.fillStyle='rgba(0,0,80,.25)';
+  ctx.font=`bold ${Math.min(W,H)*0.06}px 'Noto Sans JP',sans-serif`;
+  ctx.textAlign='center';
+  ctx.fillText('校 庭', W/2, H*0.12);
+}
+
+function autoWalk(){
+  if(!miniRunning) return;
+  const canvas = document.getElementById('snowCanvas');
+  const W = canvas.offsetWidth, H = canvas.offsetHeight;
+  walkerPos.x += (Math.random()-0.5)*80;
+  walkerPos.y += (Math.random()-0.5)*60;
+  walkerPos.x = Math.max(30, Math.min(W-30, walkerPos.x));
+  walkerPos.y = Math.max(60, Math.min(H-60, walkerPos.y));
+  updateWalker();
+}
+
+function updateWalker(){
+  const el = document.getElementById('walker');
+  el.style.left = walkerPos.x + 'px';
+  el.style.top  = walkerPos.y + 'px';
+  el.style.transform = 'translate(-50%,-50%)';
+  el.innerHTML = `<svg viewBox="0 0 50 60" width="50" height="60" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="25" cy="15" rx="13" ry="13" fill="#f5c8a0"/>
+    <rect x="12" y="26" width="26" height="26" rx="6" fill="#3366cc"/>
+    <ellipse cx="16" cy="52" rx="7" ry="6" fill="#223"/>
+    <ellipse cx="34" cy="52" rx="7" ry="6" fill="#223"/>
+  </svg>`;
+}
+
+function onTap(e){
+  if(!miniRunning) return;
+  e.preventDefault && e.preventDefault();
+  const canvas = document.getElementById('snowCanvas');
+  const rect = canvas.getBoundingClientRect();
+  let cx, cy;
+  if(e.touches){ cx=e.touches[0].clientX-rect.left; cy=e.touches[0].clientY-rect.top; }
+  else { cx=e.clientX-rect.left; cy=e.clientY-rect.top; }
+
+  tapCount++;
+  footprints.push({x:cx, y:cy});
+  drawFootprint(canvas, cx, cy);
+  document.getElementById('tapCounter').textContent = `⏱ ${Math.max(0,((5000-(Date.now()-miniStartTime))/1000)).toFixed(1)}s　タップ: ${tapCount} / 20`;
+
+  // move walker toward tap
+  walkerPos = {x:cx, y:cy};
+  updateWalker();
+
+  if(tapCount >= 20) triggerClear();
+}
+
+function drawFootprint(canvas, x, y){
+  const ctx = canvas.getContext('2d');
+  ctx.save();
+  ctx.fillStyle='rgba(80,100,140,.5)';
+  // left foot
+  ctx.beginPath();
+  ctx.ellipse(x-6, y, 4, 7, -0.3, 0, Math.PI*2);
+  ctx.fill();
+  // right foot
+  ctx.beginPath();
+  ctx.ellipse(x+6, y-12, 4, 7, 0.3, 0, Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function triggerClear(){
+  if(!miniRunning) return;
+  miniRunning=false;
+  clearInterval(quitTimer);
+  clearInterval(walkerMoveTimer);
+
+  // draw arigatou with footprints
+  drawArigatou();
+
+  spawnConfetti(100);
+  setTimeout(()=>{
+    document.getElementById('clearOverlay').classList.add('show');
+  }, 1000);
+}
+
+function drawArigatou(){
+  const canvas = document.getElementById('snowCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.save();
+  ctx.fillStyle='rgba(60,80,140,.6)';
+  ctx.font = `bold ${W*0.12}px 'Noto Sans JP',sans-serif`;
+  ctx.textAlign='center';
+  ctx.textBaseline='middle';
+
+  // draw text as footprint dots
+  const offscreen = document.createElement('canvas');
+  offscreen.width=W; offscreen.height=H;
+  const oc = offscreen.getContext('2d');
+  oc.fillStyle='#000';
+  oc.font = `bold ${W*0.12}px 'Noto Sans JP',sans-serif`;
+  oc.textAlign='center';
+  oc.textBaseline='middle';
+  oc.fillText('ありがとう', W/2, H*0.55);
+
+  const imgData = oc.getImageData(0,0,W,H).data;
+  for(let py=0;py<H;py+=12){
+    for(let px=0;px<W;px+=14){
+      const idx=(py*W+px)*4;
+      if(imgData[idx+3]>128){
+        ctx.beginPath();
+        ctx.ellipse(px,py,3,5,-0.3,0,Math.PI*2);
+        ctx.fill();
+      }
+    }
+  }
+  ctx.restore();
+}
+
+function triggerFail(){
+  if(!miniRunning) return;
+  miniRunning=false;
+  clearInterval(quitTimer);
+  clearInterval(walkerMoveTimer);
+
+  const canvas = document.getElementById('snowCanvas');
+  canvas.removeEventListener('click', onTap);
+  canvas.removeEventListener('touchstart', onTap);
+
+  // draw % on field
+  drawPercent();
+
+  document.getElementById('failMsg').textContent = '校庭に「％」という文字が…';
+  setTimeout(()=>{
+    document.getElementById('failOverlay').classList.add('show');
+    showAngryTeacher();
+  }, 1000);
+}
+
+function drawPercent(){
+  const pct = document.getElementById('percentCanvas');
+  const W = pct.width, H = pct.height;
+  const ctx = pct.getContext('2d');
+  pct.style.opacity='1';
+
+  // footprint % shape
+  const offscreen = document.createElement('canvas');
+  offscreen.width=W; offscreen.height=H;
+  const oc = offscreen.getContext('2d');
+  oc.fillStyle='#000';
+  oc.font = `bold ${Math.min(W,H)*0.55}px monospace`;
+  oc.textAlign='center';
+  oc.textBaseline='middle';
+  oc.fillText('%', W/2, H/2);
+
+  ctx.fillStyle='rgba(100,60,60,.65)';
+  const imgData = oc.getImageData(0,0,W,H).data;
+  for(let py=0;py<H;py+=14){
+    for(let px=0;px<W;px+=16){
+      const idx=(py*W+px)*4;
+      if(imgData[idx+3]>128){
+        ctx.beginPath();
+        ctx.ellipse(px,py,4,6,-0.3,0,Math.PI*2);
+        ctx.fill();
+      }
+    }
+  }
+}
+
+function showAngryTeacher(){
+  const el = document.getElementById('angryTeacher');
+  el.style.display='flex';
+
+  // pick a teacher SVG
+  const teachers = CHARS.filter(c=>c.id==='hasegawa_r'||c.id==='sudo'||c.id==='inoue_h');
+  const t = teachers[Math.floor(Math.random()*teachers.length)];
+  document.getElementById('angryTeacherSvg').innerHTML = t.svg;
+}
+
+function quitMini(){
+  if(!miniRunning) return;
+  clearTimeout(quitTimer);
+  triggerFail();
+}
+
+function restartAll(){
+  // reset all
+  document.getElementById('clearOverlay').classList.remove('show');
+  document.getElementById('failOverlay').classList.remove('show');
+  document.getElementById('angryTeacher').style.display='none';
+  document.getElementById('miniScreen').classList.add('hidden');
+  document.getElementById('cardScreen').classList.add('hidden');
+  document.getElementById('gachaScreen').classList.add('hidden');
+  document.getElementById('dragonWrap').style.display='none';
+  document.getElementById('capsuleWrap').classList.add('hidden');
+  document.getElementById('capsuleSvg').classList.remove('capsule-crack');
+  document.getElementById('percentCanvas').style.opacity='0';
+  document.getElementById('titleScreen').classList.remove('hidden');
+  miniRunning=false; tapCount=0; footprints=[];
+  if(dragState && dragState._cleanup) dragState._cleanup();
+  dragState = {active:false, startY:0, currentY:0, dragonY:-60, triggered:false};
+  const canvas=document.getElementById('snowCanvas');
+  canvas.removeEventListener('click',onTap);
+  canvas.removeEventListener('touchstart',onTap);
+  // reset capsule cracked state
+  const cw2 = document.getElementById('capsuleWrap');
+  if(cw2) { cw2.dataset.cracked=''; cw2.style.cursor=''; cw2.style.animation=''; }
+  document.getElementById('capsuleSvg').classList.remove('capsule-crack');
+  document.getElementById('teaseOverlay').classList.remove('show');
+  document.getElementById('dragHint').style.display='';
+}
 </script>
 
 </body>
-</html></html>
+</html></html></html>
